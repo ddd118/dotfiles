@@ -42,7 +42,7 @@ USAGE
 # --------------------
 # defaults
 # --------------------
-GITLAB_URL="${GITLAB_URL:-?"please set GITLAB_URL e.g. https://gitlab.com}"}"
+GITLAB_URL="${GITLAB_URL:-}"
 RUNNER_VERSION="latest"
 DOCKER_VERSION="29.1.3-cli"
 RUNNER_TAGS="docker"
@@ -128,6 +128,12 @@ done
 
 if [[ ${#RUNNER_NAMES[@]} -eq 0 ]]; then
     RUNNER_NAMES=("docker-runner-01")
+fi
+
+# URL は必須
+if [[ -z "${GITLAB_URL}" ]]; then
+    echo "please specify GitLab URL via --url or GITLAB_URL env" >&2
+    exit 1
 fi
 
 # 非対話モードは token 必須
@@ -220,7 +226,14 @@ else
 fi
 
 # Runner 本体（Runner が job container を起動するため host docker.sock が必要）
+#
+# NOTE:
+#   /var/run/docker.sock は mode=660 のことが多く、sock の GID に属していないとアクセスできません。
+#   WSL + Docker Desktop などではコンテナ内で見える sock の GID が環境により変わることがあるため、
+#   起動時にホスト側の sock GID を取得して --group-add で付与します。
+DOCKER_SOCK_GID="$(stat -c %g /var/run/docker.sock)"
 docker run -d --name "${CONTAINER_NAME}" --restart always \
+    --group-add "${DOCKER_SOCK_GID}" \
     -v "${CONFIG_DIR}:/etc/gitlab-runner" \
     -v "${CACHE_DIR}:/cache" \
     -v /var/run/docker.sock:/var/run/docker.sock \
