@@ -34,7 +34,7 @@
 [gtr "editor"]
 	default = code
 [gtr "ai"]
-	default = claude
+	default = codex
 [gtr "copy"]
 	includeDirs = .notes
 	include = todo.txt
