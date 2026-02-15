@@ -1,0 +1,365 @@
+#!/usr/bin/env bash
+# universal-notify: WSL/Devcontainer 両対応の “通知コマンド” 1ファイル版
+#
+# - VS Code 統合ターミナル上（WSL/Devcontainer/SSH など）では OSC 777 を出力
+#   → Terminal Notification 拡張が OS 通知に変換（クリックで元ターミナルに戻れる）
+# - VS Code 以外の WSL では wsl-notify-send.exe があればそれを使用（Windows トースト）
+#
+# 使い方（シンプル）:
+#   universal-notify "Title" "Message"
+#   echo "Message from stdin" | universal-notify "Title"
+#
+# notify-send 互換っぽく使う場合:
+#   universal-notify -u low -t 3000 "Title" "Message"
+#
+# Claude Code / Codex の hooks/notify から JSON を渡されても（python3 があれば）自動で拾います:
+#   Claude Code: stdin に JSON
+#   Codex: argv[1] に JSON
+#
+# 設定（任意）:
+#   NOTIFY_MODE=auto|osc|wsl|both|linux|stdout|none   (default: auto)
+#   NOTIFY_WSL_CATEGORY="..."   (wsl-notify-send.exe に渡す category の既定値)
+#   NOTIFY_MAXLEN=300           (title/body の最大文字数; 0 で無制限)
+
+set -euo pipefail
+
+NOTIFY_MODE="${NOTIFY_MODE:-auto}"
+NOTIFY_WSL_CATEGORY="${NOTIFY_WSL_CATEGORY:-${WSL_DISTRO_NAME-}}"
+NOTIFY_MAXLEN="${NOTIFY_MAXLEN:-300}"
+
+usage() {
+  cat <<'USAGE'
+universal-notify (1 file)
+
+Usage:
+  universal-notify [options] [TITLE] [MESSAGE]
+  echo "MESSAGE" | universal-notify [options] "TITLE"
+  universal-notify --mode osc "TITLE" "MESSAGE"
+  universal-notify '{"type":"agent-turn-complete", ... }'     # Codex notify の JSON 引数にも対応
+
+Options (一部 notify-send 互換):
+  -t, --title TITLE
+  -m, --message MESSAGE
+  -c, --category CATEGORY
+      --mode auto|osc|wsl|both|linux|stdout|none
+      --help
+
+Environment:
+  NOTIFY_MODE            default: auto
+  NOTIFY_WSL_CATEGORY    default: $WSL_DISTRO_NAME (if set)
+  NOTIFY_MAXLEN          default: 300 (0 = unlimited)
+USAGE
+}
+
+has_cmd() { command -v "$1" >/dev/null 2>&1; }
+
+in_vscode_terminal() {
+  # VS Code 統合ターミナルでは通常 TERM_PROGRAM=vscode が入ります
+  [[ "${TERM_PROGRAM-}" == "vscode" ]] || [[ -n "${VSCODE_IPC_HOOK_CLI-}" ]] || [[ -n "${VSCODE_PID-}" ]]
+}
+
+truncate() {
+  local s="$1"
+  local max="$2"
+  if [[ "$max" =~ ^[0-9]+$ ]] && (( max > 0 )) && (( ${#s} > max )); then
+    printf '%s…' "${s:0:max}"
+  else
+    printf '%s' "$s"
+  fi
+}
+
+sanitize_for_osc() {
+  # OSC 777 は区切りが ';' なのでセミコロンと改行は潰す
+  local s="$1"
+  s="${s//$'\r'/ }"
+  s="${s//$'\n'/ }"
+  s="${s//$'\a'/ }"
+  s="${s//;/：}"
+  printf '%s' "$s"
+}
+
+send_osc_777() {
+  local title="$1"
+  local body="$2"
+
+  # 端末に直接出すので、stdout が TTY でないなら何もしない（ログ汚染防止）
+  [[ -t 1 ]] || return 1
+
+  title="$(sanitize_for_osc "$title")"
+  body="$(sanitize_for_osc "$body")"
+
+  if [[ -n "${TMUX-}" ]]; then
+    # Terminal Notification 拡張の例（tmux passthrough）に合わせる
+    # \ePtmux;\e <OSC ...> \e\\
+    printf '\ePtmux;\e\e]777;notify;%s;%s\a\e\\' "$title" "$body"
+  else
+    printf '\e]777;notify;%s;%s\a' "$title" "$body"
+  fi
+}
+
+send_wsl_notify() {
+  local category="$1"
+  shift
+  if ! has_cmd "wsl-notify-send.exe"; then
+    return 1
+  fi
+
+  # そのまま notify-send 互換引数を渡せるのが wsl-notify-send の利点
+  # category をデフォルトで付けたい場合のみ補う（既に指定されていたら付けない）
+  local args=()
+  local has_cat=0
+  for a in "$@"; do
+    case "$a" in
+      -c|--category|--category=*) has_cat=1 ;;
+    esac
+  done
+  if [[ -n "$category" && $has_cat -eq 0 ]]; then
+    args+=(--category "$category")
+  fi
+
+  # Windows 側実行なので、無駄な出力は捨てる
+  wsl-notify-send.exe "${args[@]}" "$@" >/dev/null 2>&1
+}
+
+send_linux_notify() {
+  if ! has_cmd "notify-send"; then
+    return 1
+  fi
+  notify-send "$@" >/dev/null 2>&1
+}
+
+# ---- argument parsing (notify-send っぽく、主要オプションは食べて title/body を拾う) ----
+mode="$NOTIFY_MODE"
+title=""
+body=""
+category=""
+json_payload=""
+
+# まず明示オプションだけ拾う（残りは notify-send 互換パースに回す）
+explicit_args=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help|-h)
+      usage; exit 0 ;;
+    --mode)
+      mode="${2-}"; shift 2 ;;
+    -t|--title)
+      title="${2-}"; shift 2 ;;
+    -m|--message|--body)
+      body="${2-}"; shift 2 ;;
+    -c|--category)
+      category="${2-}"; shift 2 ;;
+    --)
+      shift
+      explicit_args+=("$@")
+      break ;;
+    *)
+      explicit_args+=("$1"); shift ;;
+  esac
+done
+
+# Codex notify など: 単一引数が JSON の場合
+if [[ -z "$title" && -z "$body" && ${#explicit_args[@]} -eq 1 ]]; then
+  if [[ "${explicit_args[0]}" =~ ^[[:space:]]*\{ ]]; then
+    json_payload="${explicit_args[0]}"
+    explicit_args=()
+  fi
+fi
+
+# stdin がある場合（Claude Code hooks など）
+stdin_payload=""
+if ! [[ -t 0 ]]; then
+  stdin_payload="$(cat || true)"
+fi
+if [[ -z "$body" && -z "$json_payload" && -n "${stdin_payload//[[:space:]]/}" ]]; then
+  # stdin が JSON っぽければ JSON として扱う
+  if [[ "$stdin_payload" =~ ^[[:space:]]*\{ ]]; then
+    json_payload="$stdin_payload"
+  else
+    body="$stdin_payload"
+  fi
+fi
+
+# JSON から title/body/category を補完（python3 があれば堅牢に）
+if [[ -n "${json_payload//[[:space:]]/}" ]]; then
+  if has_cmd python3; then
+    mapfile -t parsed < <(NOTIFY_JSON="$json_payload" python3 - <<'PY' 2>/dev/null || true
+import os, json
+
+raw = (os.environ.get("NOTIFY_JSON") or "").strip()
+if not raw:
+    raise SystemExit(0)
+
+try:
+    j = json.loads(raw)
+except Exception:
+    # JSON でなければ、そのまま message として扱う
+    print("Notification")
+    print(raw)
+    print("")
+    raise SystemExit(0)
+
+title = None
+body = None
+category = None
+
+def first(*vals):
+    for v in vals:
+        if v is None:
+            continue
+        if isinstance(v, str) and v.strip() == "":
+            continue
+        return v
+    return None
+
+if isinstance(j, dict):
+    # Claude Code Notification hook
+    if j.get("hook_event_name") == "Notification" or ("notification_type" in j and "message" in j):
+        ntype = j.get("notification_type") or ""
+        title = "Claude Code" + (f" ({ntype})" if ntype else "")
+        body = j.get("message") or ""
+        category = first(j.get("notification_type"), j.get("hook_event_name"))
+    # Codex notify
+    elif j.get("type") == "agent-turn-complete":
+        title = "Codex"
+        body = j.get("last-assistant-message") or "Turn complete"
+        category = j.get("type")
+    else:
+        title = first(j.get("title"), j.get("summary"), j.get("app"), j.get("hook_event_name")) or "Notification"
+        body = first(j.get("message"), j.get("body"), j.get("text"), j.get("last-assistant-message")) or raw
+        category = first(j.get("category"), j.get("notification_type"), j.get("type"), j.get("hook_event_name")) or ""
+else:
+    title = "Notification"
+    body = raw
+    category = ""
+
+def clean(s: str) -> str:
+    s = str(s)
+    return s.replace("\r", " ").replace("\n", " ")
+
+print(clean(title))
+print(clean(body))
+print(clean(category))
+PY
+)
+
+    # parsed[0]=title, [1]=body, [2]=category
+    if [[ -z "$title" && ${#parsed[@]} -ge 1 ]]; then title="${parsed[0]}"; fi
+    if [[ -z "$body"  && ${#parsed[@]} -ge 2 ]]; then body="${parsed[1]}"; fi
+    if [[ -z "$category" && ${#parsed[@]} -ge 3 ]]; then category="${parsed[2]}"; fi
+  else
+    # python3 が無い場合は雑にそのまま
+    if [[ -z "$title" ]]; then title="Notification"; fi
+    if [[ -z "$body" ]]; then body="$json_payload"; fi
+  fi
+fi
+
+# notify-send 互換引数から title/body を拾う（explicit_args がある場合）
+# - ここでは「OSC 用に title/body を抽出」するだけで、wsl-notify-send へは元引数を渡す
+notify_send_title=""
+notify_send_body=""
+notify_send_category=""
+
+if [[ ${#explicit_args[@]} -gt 0 ]]; then
+  i=0
+  while [[ $i -lt ${#explicit_args[@]} ]]; do
+    a="${explicit_args[$i]}"
+    case "$a" in
+      --urgency=*|--expire-time=*|--app-name=*|--icon=*|--category=*|--hint=*|--replace-id=*)
+        # 値が同一トークン
+        ;;
+      -u|--urgency|-t|--expire-time|-a|--app-name|-i|--icon|-c|--category|-h|--hint|-r|--replace-id)
+        # 次が値
+        ((i++)) || true
+        if [[ "$a" == "-c" || "$a" == "--category" ]]; then
+          notify_send_category="${explicit_args[$i]:-}"
+        fi
+        ;;
+      -p|--print-id|-w|--wait|-v|--version)
+        # 値なし
+        ;;
+      --)
+        ;;
+      -*)
+        # 不明オプションは無視
+        ;;
+      *)
+        if [[ -z "$notify_send_title" ]]; then
+          notify_send_title="$a"
+        elif [[ -z "$notify_send_body" ]]; then
+          notify_send_body="$a"
+        else
+          notify_send_body+=" $a"
+        fi
+        ;;
+    esac
+    ((i++)) || true
+  done
+fi
+
+# 明示の title/body が未指定なら notify-send 的に拾ったものを採用
+if [[ -z "$title" && -n "$notify_send_title" ]]; then title="$notify_send_title"; fi
+if [[ -z "$body"  && -n "$notify_send_body"  ]]; then body="$notify_send_body"; fi
+if [[ -z "$category" && -n "$notify_send_category" ]]; then category="$notify_send_category"; fi
+
+# 最終デフォルト
+if [[ -z "$title" ]]; then title="Notification"; fi
+if [[ -z "$body" ]]; then body=""; fi
+if [[ -z "$category" ]]; then category="$NOTIFY_WSL_CATEGORY"; fi
+
+title="$(truncate "$title" "$NOTIFY_MAXLEN")"
+body="$(truncate "$body" "$NOTIFY_MAXLEN")"
+
+# ---- dispatch ----
+case "$mode" in
+  auto)
+    if in_vscode_terminal; then
+      # VS Code 統合ターミナルなら OSC（Devcontainer/WSL 共通）
+      send_osc_777 "$title" "$body" || true
+    elif has_cmd "wsl-notify-send.exe"; then
+      # WSL の通常ターミナルなら Windows toast
+      # 互換性のため、notify-send 風オプションが渡されていたらそのまま転送
+      if [[ ${#explicit_args[@]} -gt 0 ]]; then
+        send_wsl_notify "$category" "${explicit_args[@]}" || true
+      else
+        send_wsl_notify "$category" "$title" "$body" || true
+      fi
+    elif has_cmd "notify-send"; then
+      send_linux_notify "$title" "$body" || true
+    else
+      printf '[notify] %s: %s\n' "$title" "$body" >&2
+    fi
+    ;;
+  osc)
+    send_osc_777 "$title" "$body" || true
+    ;;
+  wsl)
+    if [[ ${#explicit_args[@]} -gt 0 ]]; then
+      send_wsl_notify "$category" "${explicit_args[@]}" || true
+    else
+      send_wsl_notify "$category" "$title" "$body" || true
+    fi
+    ;;
+  both)
+    # 可能なら両方（WSL+VS Code だと重複するので注意）
+    if [[ ${#explicit_args[@]} -gt 0 ]]; then
+      send_wsl_notify "$category" "${explicit_args[@]}" || true
+    else
+      send_wsl_notify "$category" "$title" "$body" || true
+    fi
+    send_osc_777 "$title" "$body" || true
+    ;;
+  linux)
+    send_linux_notify "$title" "$body" || true
+    ;;
+  stdout)
+    printf '%s: %s\n' "$title" "$body"
+    ;;
+  none)
+    exit 0
+    ;;
+  *)
+    printf 'universal-notify: unknown mode: %s\n' "$mode" >&2
+    exit 2
+    ;;
+esac

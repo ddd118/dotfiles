@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<USAGE >&2
+使い方:
+  sync-archive-to-win-downloads [--repo <path>] [--archive <path>] [--dest <path>] [--once]
+
+オプション:
+  --repo    : 対象リポジトリパス[カレントディレクトリ]
+  --archive : アーカイブパス[<original-worktree>/.tmp/tdx.zip]
+  --dest    : コピー先[%USERPROFILE%/Downloads/<basename(archive)>]
+  --once    : 1回だけコピーして終了[デフォルトは監視]
+
+Notes:
+  - このスクリプトはWSL以外では動作しないので注意 (needs cmd.exe + wslpath).
+  - 依存: inotifywait (inotify-tools), git, cp, mv
+USAGE
+}
+
+repo="."
+archive=""
+dest=""
+once=0
+
+# * 0) スクリプト準備
+# 引数解析
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --repo)
+        repo="${2:-}"
+        shift 2
+        ;;
+    --archive)
+        archive="${2:-}"
+        shift 2
+        ;;
+    --dest)
+        dest="${2:-}"
+        shift 2
+        ;;
+    --once)
+        once=1
+        shift
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *)
+        echo "Unknown arg: $1" >&2
+        usage
+        exit 2
+        ;;
+    esac
+done
+
+# WSL1/2: /proc/version に "Microsoft" を含んでいることを利用してチェック
+is_wsl() {
+    grep -qi microsoft /proc/version 2>/dev/null
+}
+
+if ! is_wsl; then
+    echo "[sync] This script is for WSL. (Not running under WSL)" >&2
+    exit 2
+fi
+
+# ? 実行対象が Git のリポジトリでない場合は想定しない
+repo_root="$(git -C "$repo" rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ -z "$repo_root" ]]; then
+    echo "[sync] Not a git repository: $repo" >&2
+    exit 2
+fi
+
+# アーカイブ出力先のベースツリーを取得
+original_root="$(git -C "$repo_root" worktree list --porcelain | awk 'NR == 1{print $2}')"
+if [[ -z "${original_root}" || ! -d "${original_root}" ]]; then
+    original_root="$repo_root"
+fi
+
+# コピー元のアーカイブパスを決定
+if [[ -z "$archive" ]]; then
+    archive="$original_root/.tmp/tdx.zip"
+fi
+
+resolve_windows_downloads_dir() {
+    # ? 1) PowerShell + Shell.Application で "shell:Downloads" を解決
+    local ps="/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/powershell.exe"
+    local dl_win=""
+    if [[ -x "$ps" ]]; then
+        dl_win="$("$ps" -NoProfile -NonInteractive -Command \
+            "(New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path" \
+            2>/dev/null | tr -d '\r' | tr -d '\n' || true)"
+    fi
+    if [[ -n "$dl_win" ]]; then
+        wslpath "$dl_win" 2>/dev/null || true
+        return 0
+    fi
+
+    # ? 2) フォールバック：cmd.exe で USERPROFILE（環境依存）
+    local cmd="/mnt/c/WINDOWS/system32/cmd.exe"
+    local up_win=""
+    if [[ -x "$cmd" ]]; then
+        up_win="$("$cmd" /c echo %USERPROFILE% 2>/dev/null | tr -d '\r' | tr -d '\n' || true)"
+    fi
+    if [[ -n "$up_win" ]]; then
+        local up_wsl
+        up_wsl="$(wslpath "$up_win" 2>/dev/null || true)"
+        [[ -n "$up_wsl" ]] && { echo "$up_wsl/Downloads"; return 0; }
+    fi
+
+    return 1
+}
+
+# コピー先のパスを決定
+if [[ -z "$dest" ]]; then
+    downloads_dir="$(resolve_windows_downloads_dir || true)"
+    if [[ -z "${downloads_dir:-}" ]]; then
+        echo "[sync] Failed to resolve Windows Downloads path. Specify --dest explicitly if needed." >&2
+        exit 2
+    fi
+    dest="$downloads_dir/$(basename "$archive")"
+fi
+
+# コピーを行う関数
+copy_once() {
+    [[ -f "$archive" ]] || return 0
+    mkdir -p "$(dirname "$dest")"
+    tmp="$dest.tmp.$$"
+    cp -f "$archive" "$tmp"
+    mv -f "$tmp" "$dest"
+    echo "[sync] copied -> $dest" >&2
+}
+
+# ? オプションが --once の場合は一回コピーして終了
+if ((once)); then
+    copy_once
+    exit 0
+fi
+
+# 依存チェック
+if ! command -v inotifywait >/dev/null 2>&1; then
+    echo "[sync] inotifywait not found. Install: sudo apt-get update && sudo apt-get install -y inotify-tools" >&2
+    exit 1
+fi
+
+# * 1) 監視して変更があればコピーを行う
+# ? 起動直後に一回コピー
+copy_once
+
+# 監視対象
+watch_dir="$(dirname "$archive")"
+watch_name="$(basename "$archive")"
+
+mkdir -p "$watch_dir"
+
+# 監視セットアップ
+# ? エクスポート スクリプトは mv を行う想定なので、moved_to/create にも反応するようにする
+inotifywait -m -q -e close_write,moved_to,create --format '%w%f' "$watch_dir" | while read -r changed; do
+    [[ "$(basename "$changed")" == "$watch_name" ]] || continue
+    copy_once
+done

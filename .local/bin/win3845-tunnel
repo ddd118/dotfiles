@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+WIN_HOST=$(ip route | awk '/^default/ {print $3}')
+
+exec autossh -M 0 -N \
+    -o "ServerAliveInterval=30" -o "ServerAliveCountMax=3" \
+    -o "ExitOnForwardFailure=yes" \
+    -i /home/zanth/.ssh/id_ed25519 \
+    -L 3845:127.0.0.1:3845 \
+    zanth@"${WIN_HOST}"

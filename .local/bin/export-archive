@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# * `git archive` で zip アーカイブを出力する
+# * 更にローカル gitignored ファイルを後から付け足すことで ignore 対象のファイルも一部混ぜるようにしている
+# * Git フック (コミット後/リライト後) のトリガー実装済み
+# * 実装内容:
+# * - 複数のワークツリーで動作します(ベースワークツリーに出力)
+# * - 単一ファイルに出力 (.tmp に書き込んでから名前を変更)
+# * - 同時コミット間でエクスポートが同時に行われることを防ぐためのノンブロッキングロック
+# * - 高速で複数回コミットされた場合、要求された最新のコミットのみをエクスポートします
+# * 使い方:
+# *   ./export-archive.githook.sh [<コミットハッシュ(default:HEAD)>]
+# * 環境変数:
+# *   TDX_EXPORT_OUT_ROOT: Gitベースツリーのルートディレクトリ (デフォルト: カレントリポジトリのベースワークツリーのルート)
+# *   TDX_EXPORT_OUT_DIR: アーカイブ出力先ディレクトリ (デフォルト: 出力先ルート/.tmp)
+# *   TDX_EXPORT_NAME: 出力アーカイブ名 (デフォルト: tdx.zip)
+
+# * 0) コマンドチェック
+#     必要なコマンドの存在確認（git, zip, flock）
+need_cmd() {
+command -v "$1" >/dev/null 2>&1 || {
+    echo "[export] missing command: $1" >&2
+    return 1
+}
+}
+
+need_cmd git
+need_cmd zip
+need_cmd flock || true
+
+# * 1) リポジトリパスの取得
+#     カレントリポジトリのルートと、複数ワークツリー使用時のベースワークツリーを特定する
+repo_root="$(git rev-parse --show-toplevel)"
+
+# ベースワークツリーを取得: 最初のワークツリーをルートとして使用
+original_root="$(git worktree list --porcelain | awk 'NR == 1{print $2}')"
+if [[ -z "${original_root}" || ! -d "${original_root}" ]]; then
+    original_root="$repo_root"
+fi
+
+# * 2) 出力先ディレクトリと変数の初期化
+#     アーカイブ出力先、ロック/ペンディング/最終記録ファイルのパスを設定する
+#     出力先などは環境変数で上書き可能
+out_root="${TDX_EXPORT_OUT_ROOT:-$original_root}"
+out_dir="${TDX_EXPORT_OUT_DIR:-$out_root/.tmp}"
+archive_name="${TDX_EXPORT_NAME:-tdx.zip}"
+mkdir -p "$out_dir"
+
+# アーカイブ出力と関連ファイルのパス
+out="$out_dir/$archive_name"                    # アーカイブ出力先
+lock_file="$out_dir/.tdx_export.lock"           # ロックファイル（同時実行制御用）
+pending_file="$out_dir/.tdx_export.pending"     # 保留中のコミットハッシュ記録ファイル
+last_file="$out_dir/.tdx_export.last"           # 最後に処理したコミットハッシュ記録ファイル
+
+# アーカイブ対象のコミットを取得
+requested_commit="${1:-HEAD}"
+requested_commit="$(git -C "$repo_root" rev-parse "$requested_commit")"
+
+# * 3) ロック機構の初期化
+#     ノンブロッキングロックで同時実行を制御する
+#     同時にコミットされた場合は最新のコミットリクエストを常に保持
+printf '%s\n' "$requested_commit" > "$pending_file"
+
+# ノンブロッキングロック: 別のシェルで実行中の場合はすぐに終了する
+# ファイルディスクリプタ 9 をロック用に使用し、シェル終了まで保持
+exec 9>"$lock_file"
+if command -v flock >/dev/null 2>&1; then
+    if ! flock -n 9; then
+        exit 0
+    fi
+fi
+
+# * 4) クリーンアップと例外処理の設定
+#     スクリプト終了時に一時ファイルを削除する仕組みを用意
+cleanup_tmp=""
+# クリーンアップ関数：一時ファイルが存在する場合に削除
+cleanup() {
+[[ -n "$cleanup_tmp" && -f "$cleanup_tmp" ]] && rm -f "$cleanup_tmp" || true
+}
+# シェル終了時にクリーンアップを実行
+trap cleanup EXIT
+
+# * 5) メインループ：コミットのアーカイブ処理
+#     git archive でファイル群を zip に出力し、gitignored ファイルを追加する
+#     保留中のコミットハッシュが変わらなくなるまでループを続ける
+while :; do
+    # 保留中のコミット情報から対象となるコミットを取得
+    target_commit="$(cat "$pending_file" 2>/dev/null || echo "$requested_commit")"
+
+    # アーカイブが出力済みで、最後に行ったコミットとして記録されている場合は終了する
+    if [[ -f "$out" && -f "$last_file" ]] && [[ "$(cat "$last_file")" == "$target_commit" ]]; then
+        break
+    fi
+
+    # アーカイブ出力用の一時ファイル
+    tmp="$out_dir/.${archive_name}.tmp.$$"
+    cleanup_tmp="$tmp"
+
+    # ターゲットコミットで追跡されたファイルをまずアーカイブに出力する
+    git -C "$repo_root" archive --format=zip -o "$tmp" "$target_commit"
+
+    # gitignored ファイルをアーカイブに混ぜる
+    extras=(
+        .claude/settings.local.json
+        .notes
+        customInstruction.prompt.md
+        snippet.local.md
+        todo.txt
+        waiting.txt
+        someday.txt
+        inbox.txt
+        done.txt
+    )
+
+    # 現在のワークツリーとベースワークツリーから必要なファイルを探す
+    extras_current=()
+    extras_original=()
+    for p in "${extras[@]}"; do
+        if [[ -e "$repo_root/$p" ]]; then
+            extras_current+=("$p")
+        elif [[ -e "$original_root/$p" ]]; then
+            extras_original+=("$p")
+        fi
+    done
+
+    # 現在のワークツリーから優先追加
+    if (( ${#extras_current[@]} )); then
+        (cd "$repo_root" && zip -q -r -u "$tmp" "${extras_current[@]}")
+    fi
+
+    # 不足している場合元のワークツリーから欠落しているものを追加する
+    if (( ${#extras_original[@]} )); then
+        (cd "$original_root" && zip -q -r -u "$tmp" "${extras_original[@]}")
+    fi
+
+    # 常にアーカイブは一つだけにする
+    mv -f "$tmp" "$out"
+
+    # 一時ファイル名を初期化し、最後に行ったコミットを記録する
+    cleanup_tmp=""
+    printf '%s\n' "$target_commit" >"$last_file"
+
+    # 保留コミットとサイドのコミットが同じ(=エクスポート中に新しいリクエストが来なかった場合)は終了する
+    if [[ "$(cat "$pending_file" 2>/dev/null || echo "")" == "$target_commit" ]]; then
+        break
+    fi
+done
+
+echo "[export] updated: $out" >&2
