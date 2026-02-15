@@ -27,7 +27,7 @@ is_container() {
 
 # ------------------------------------------------------------
 # 環境変数（必要最低限）
-export LANG="${LANG:-ja_JP.UTF-8}"
+export LANG="ja_JP.UTF-8"
 export LANGUAGE="${LANGUAGE:-ja_JP:ja}"
 export PAGER="${PAGER:-less}"
 export LESS="${LESS:--R}"
@@ -65,7 +65,6 @@ path=("$HOME/.local/bin" "$HOME/bin" $path)
 # Volta（使ってるなら PATH を通すだけでOK）
 if [[ -d "$HOME/.volta/bin" ]]; then
   export VOLTA_HOME="${VOLTA_HOME:-$HOME/.volta}"
-  export VOLTA_FEATURE_PNPM=1
   path=("$VOLTA_HOME/bin" $path)
 fi
 
@@ -79,9 +78,6 @@ fi
 if [[ -d "$HOME/.zsh/completions" ]]; then
   fpath=("$HOME/.zsh/completions" $fpath)
 fi
-
-# compinit 前に必要な補完（git-gtr）
-git gtr --help > /dev/null 2>&1 && eval "$(git gtr completion zsh)"
 
 # dircolors（ファイルがあるときだけ）
 if command -v dircolors >/dev/null 2>&1 && [[ -f "$HOME/.dir_colors" ]]; then
@@ -133,10 +129,15 @@ fi
 if [[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-bat" ]]; then
   plugins+=(zsh-bat)
 fi
+if [[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-claudecode-completion" ]]; then
+  plugins+=(zsh-claudecode-completion)
+fi
 # syntax-highlighting は最後に読みたいので最後尾に
 if [[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-syntax-highlighting" ]]; then
   plugins+=(zsh-syntax-highlighting)
 fi
+
+# compinit 前に必要な補完があればここに書く
 
 # 読み込み（これが compinit も内部でやる）
 if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
@@ -145,6 +146,9 @@ else
   # oh-my-zsh 無い環境の保険
   autoload -Uz compinit && compinit
 fi
+
+# compdef 使う補完は compinit の後に書く
+eval "$(codex completion zsh)"
 
 # ------------------------------------------------------------
 # setopt（WSL時代のやつから “安全で便利” 寄りを統合）
@@ -251,15 +255,14 @@ alias py="python3"
 alias pipi="pip install"
 alias rez="exec zsh"
 alias edc="${EDITOR:-vim} ~/.zshrc"
+alias soc="source ~/.zshrc"
 alias memo="${EDITOR:-vim} ~/memo.md"
 
 if is_wsl; then
-  alias C="clip.exe"
+  alias C="powershell.exe -NoProfile -Command '\$r=[System.IO.StreamReader]::new([Console]::OpenStandardInput(),[Text.Encoding]::UTF8); Set-Clipboard(\$r.ReadToEnd().TrimEnd()); \$r.Close()'"
   command -v xclip >/dev/null 2>&1 && alias xclip="xclip -selection clipboard"
 fi
 
-alias claude-resume="npx @sasazame/ccresume@latest"
-alias codex-resume="npx cdxresume@latest"
 alias gwr="git gtr"
 
 # ------------------------------------------------------------
@@ -269,6 +272,11 @@ cdls() {
   ls
 }
 add-zsh-hook chpwd cdls
+
+function gal() {
+  alias | grep "git $1" | sort | sed \
+    -E "s/^([^=]+)='?(.*)'?$/$(printf '\033[32m')\\1$(printf '\033[0m') → $(printf '\033[33m')\\2$(printf '\033[0m')/"
+}
 
 # Git Worktree Repair（そのまま移植：壊れにくいように少し堅く）
 repair_repo() {

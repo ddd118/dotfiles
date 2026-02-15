@@ -74,6 +74,8 @@ EXEC 01;04;32
 # executable bit actually set.
 .sh 01;32;40
 .csh 01;32;40
+.zsh 01;32;40
+.zwc 01;32;40
 # archives or compressed (bright red)
 .tar 01;31;40
 .tgz 01;31;40
