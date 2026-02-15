@@ -1,0 +1,52 @@
+{
+  "policies": {
+    "WebsiteFilter": {
+      "Block": ["<all_urls>"],
+      "Exceptions": [
+        "*://localhost:*/*",
+
+        "*://chatgpt.com/*",
+        "*://*.chatgpt.com/*",
+        "*://chat.openai.com/*",
+        "*://*.openai.com/*",
+        "*://*.auth.openai.com/*",
+        "*://auth0.openai.com/*",
+        "*://auth.openai.com/*",
+        "*://*.oaistatic.com/*",
+        "*://*.oaiusercontent.com/*",
+        "*://challenges.cloudflare.com/*",
+
+        "*://nextdns.io/*",
+        "*://*.nextdns.io/*",
+
+        "*://www.google.com/*",
+
+        "*://gitlab.zanthing.xyz/*",
+
+        "*://docker.com/*",
+        "*://*.docker.com/*",
+
+        "*://docs.astral.sh/*",
+
+        "*://github.com/*",
+        "*://*.github.io/*",
+
+        "*://qiita.com/*",
+        "*://*.qiita.com/*",
+        "*://qiita-user-contents.imgix.net/*",
+        "*://qiita.imgix.net/*",
+
+        "*://zenn.dev/*",
+        "*://*.zenn.dev/*",
+        "*://zncdn.dev/*",
+        "*://*.zncdn.dev/*",
+
+        "*://ping-t.com/*",
+        "*://*.ping-t.com/*"
+      ]
+    },
+
+    "DNSOverHTTPS": { "Enabled": false, "Locked": true },
+    "BlockAboutConfig": true
+  }
+}
