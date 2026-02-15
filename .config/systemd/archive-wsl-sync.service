@@ -1,0 +1,15 @@
+[Unit]
+Description=Sync tdx archive to Windows Downloads
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bash %h/.local/bin/sync-archive-to-win-downloads --repo %h/repos/
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
