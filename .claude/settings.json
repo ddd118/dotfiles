@@ -1,0 +1,50 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__serena",
+      "mcp__chrome-devtools",
+      "mcp__figma-remote-mcp",
+      "mcp__playwright",
+      "mcp__brave-search",
+      "Bash(git apply:*)",
+      "Bash(patch:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(echo:*)",
+      "Bash(diff:*)",
+      "Bash(head:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(patch --dry-run:*)",
+      "Bash(git config:*)",
+      "mcp__codex__codex",
+      "Bash(git -C /workspace diff --numstat)"
+    ],
+    "deny": []
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node /home/zanth/.claude/statusline-command.js",
+    "padding": 0
+  },
+  "enabledPlugins": {
+    "commit-commands@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "claude-code-setup@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "testing-suite@claude-code-templates": true,
+    "backend-development@claude-code-workflows": true,
+    "unit-testing@claude-code-workflows": true,
+    "tdd-workflows@claude-code-workflows": true,
+    "code-review-ai@claude-code-workflows": true,
+    "code-refactoring@claude-code-workflows": true,
+    "error-debugging@claude-code-workflows": true,
+    "cicd-automation@claude-code-workflows": true
+  },
+  "alwaysThinkingEnabled": true
+}
