@@ -1,0 +1,81 @@
+---
+- name: Linux environment setup
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  pre_tasks:
+    - name: Verify not running as root
+      ansible.builtin.assert:
+        that:
+          - ansible_user_id != 'root'
+        fail_msg: "root では実行しないでください。通常ユーザーで実行してください。"
+      tags: [always]
+
+    - name: Detect WSL environment
+      ansible.builtin.set_fact:
+        is_wsl: >-
+          {{
+            ansible_env.WSL_DISTRO_NAME is defined or
+            (lookup('file', '/proc/version', errors='ignore') | default('') is regex('(?i)microsoft'))
+          }}
+      tags: [always]
+
+    - name: Display environment info
+      ansible.builtin.debug:
+        msg: |
+          環境: {{ 'WSL' if is_wsl else 'ネイティブ Linux' }}
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Codename: {{ ansible_distribution_release }}
+      tags: [always]
+
+  roles:
+    - role: packages
+      tags: [packages]
+    - role: shell
+      tags: [shell]
+    - role: curl_tools
+      tags: [curl_tools]
+    - role: stow
+      tags: [stow]
+    - role: node
+      tags: [node]
+    - role: textlint
+      tags: [textlint]
+    - role: yazi
+      tags: [yazi]
+    - role: docker
+      tags: [docker]
+      when: install_docker | bool
+    - role: dotnet
+      tags: [dotnet]
+      when: install_dotnet | bool
+    - role: gui_apps
+      tags: [gui_apps]
+      when: install_gui_apps | bool
+    - role: systemd
+      tags: [systemd]
+
+  post_tasks:
+    - name: Change default shell to zsh
+      ansible.builtin.user:
+        name: "{{ ansible_user_id }}"
+        shell: /usr/bin/zsh
+      become: true
+      when: set_zsh_default | bool
+      tags: [shell]
+
+    - name: Display manual download URLs
+      ansible.builtin.debug:
+        msg: |
+          === 手動ダウンロードが必要なもの ===
+          - Cursor: https://cursor.com/ja/download
+      tags: [always]
+
+    - name: Setup complete
+      ansible.builtin.debug:
+        msg: |
+          セットアップ完了!
+          - zshrc 反映: exec zsh
+          - docker グループ反映: ログアウト/再ログイン
+      tags: [always]

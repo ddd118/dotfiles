@@ -1,0 +1,20 @@
+---
+- name: Check if batcat exists
+  ansible.builtin.command: which batcat
+  register: batcat_check
+  changed_when: false
+  failed_when: false
+
+- name: Check if bat exists
+  ansible.builtin.command: which bat
+  register: bat_check
+  changed_when: false
+  failed_when: false
+
+- name: Create bat -> batcat symlink
+  ansible.builtin.file:
+    src: "{{ batcat_check.stdout }}"
+    dest: /usr/local/bin/bat
+    state: link
+  become: true
+  when: batcat_check.rc == 0 and bat_check.rc != 0

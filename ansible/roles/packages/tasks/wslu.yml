@@ -1,0 +1,53 @@
+---
+- name: Check if wslview is installed
+  ansible.builtin.command: which wslview
+  register: wslview_check
+  changed_when: false
+  failed_when: false
+
+- name: Install wslu (Ubuntu)
+  when: wslview_check.rc != 0 and ansible_distribution == 'Ubuntu'
+  block:
+    - name: Add wslu PPA
+      ansible.builtin.apt_repository:
+        repo: ppa:wslutilities/wslu
+        state: present
+      become: true
+
+    - name: Install wslu package
+      ansible.builtin.apt:
+        name: wslu
+        state: present
+        update_cache: true
+      become: true
+
+- name: Install wslu (Debian)
+  when: wslview_check.rc != 0 and ansible_distribution == 'Debian'
+  block:
+    - name: Ensure keyrings directory
+      ansible.builtin.file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: "0755"
+      become: true
+
+    - name: Download wslu GPG key
+      ansible.builtin.shell: |
+        wget -qO- https://pkg.wslutiliti.es/public.key | gpg --dearmor -o /usr/share/keyrings/wslu-archive-keyring.pgp
+      args:
+        creates: /usr/share/keyrings/wslu-archive-keyring.pgp
+      become: true
+
+    - name: Add wslu repository
+      ansible.builtin.copy:
+        content: "deb [signed-by=/usr/share/keyrings/wslu-archive-keyring.pgp] https://pkg.wslutiliti.es/debian {{ ansible_distribution_release }} main"
+        dest: /etc/apt/sources.list.d/wslu.list
+        mode: "0644"
+      become: true
+
+    - name: Install wslu package
+      ansible.builtin.apt:
+        name: wslu
+        state: present
+        update_cache: true
+      become: true

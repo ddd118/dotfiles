@@ -1,0 +1,44 @@
+---
+- name: Check if yazi is installed
+  ansible.builtin.command: which yazi
+  register: yazi_check
+  changed_when: false
+  failed_when: false
+
+- name: Install yazi from source
+  when: yazi_check.rc != 0
+  block:
+    - name: Check if cargo is available
+      ansible.builtin.command: which cargo
+      register: cargo_check
+      changed_when: false
+      failed_when: false
+
+    - name: Install rustup
+      ansible.builtin.shell: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      args:
+        creates: "{{ ansible_env.HOME }}/.cargo/bin/cargo"
+      when: cargo_check.rc != 0
+
+    - name: Clone yazi repository
+      ansible.builtin.git:
+        repo: https://github.com/sxyazi/yazi.git
+        dest: "{{ yazi_build_dir }}"
+        version: "{{ yazi_version }}"
+
+    - name: Build yazi with cargo
+      ansible.builtin.command:
+        cmd: "{{ ansible_env.HOME }}/.cargo/bin/cargo install --path yazi-fm --locked"
+        chdir: "{{ yazi_build_dir }}"
+      environment:
+        PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
+
+- name: Install yazi plugins
+  ansible.builtin.command:
+    cmd: "{{ ansible_env.HOME }}/.cargo/bin/ya pkg add {{ item }}"
+  loop: "{{ yazi_plugins }}"
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
+  register: ya_pkg
+  changed_when: "'already' not in (ya_pkg.stderr | default(''))"
+  failed_when: false

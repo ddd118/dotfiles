@@ -1,0 +1,13 @@
+---
+- name: Include apt repository setup
+  ansible.builtin.include_tasks: apt_repos.yml
+  tags: [packages, apt]
+
+- name: Include base package installation
+  ansible.builtin.include_tasks: apt_base.yml
+  tags: [packages, apt]
+
+- name: Include wslu setup (WSL only)
+  ansible.builtin.include_tasks: wslu.yml
+  when: is_wsl | bool
+  tags: [packages, wslu]

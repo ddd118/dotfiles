@@ -1,0 +1,30 @@
+---
+- name: Ensure textlint-hub directory
+  ansible.builtin.file:
+    path: "{{ textlint_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Check if textlint-hub package.json exists
+  ansible.builtin.stat:
+    path: "{{ textlint_dir }}/package.json"
+  register: textlint_pkg
+
+- name: Initialize textlint-hub
+  ansible.builtin.command:
+    cmd: npm init -y
+    chdir: "{{ textlint_dir }}"
+  environment:
+    VOLTA_HOME: "{{ ansible_env.HOME }}/.volta"
+    PATH: "{{ ansible_env.HOME }}/.volta/bin:{{ ansible_env.PATH }}"
+  when: not textlint_pkg.stat.exists
+
+- name: Install textlint packages
+  ansible.builtin.command:
+    cmd: "npm install {{ textlint_packages | join(' ') }}"
+    chdir: "{{ textlint_dir }}"
+  environment:
+    VOLTA_HOME: "{{ ansible_env.HOME }}/.volta"
+    PATH: "{{ ansible_env.HOME }}/.volta/bin:{{ ansible_env.PATH }}"
+  register: textlint_install
+  changed_when: "'added' in textlint_install.stdout"

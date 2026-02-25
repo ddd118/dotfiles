@@ -1,0 +1,8 @@
+---
+- name: Docker setup (native Linux)
+  ansible.builtin.include_tasks: native.yml
+  when: not (is_wsl | bool)
+
+- name: Docker check (WSL)
+  ansible.builtin.include_tasks: wsl.yml
+  when: is_wsl | bool

@@ -1,0 +1,9 @@
+zsh_custom: "{{ ansible_env.HOME }}/.oh-my-zsh/custom"
+
+zsh_plugins:
+  - name: zsh-autosuggestions
+    repo: https://github.com/zsh-users/zsh-autosuggestions.git
+  - name: zsh-syntax-highlighting
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+  - name: zsh-bat
+    repo: https://github.com/fdellwing/zsh-bat.git

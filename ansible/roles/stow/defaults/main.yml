@@ -1,0 +1,11 @@
+stow_packages:
+  - dotfiles
+  - claude
+  - codex
+  - config
+  - cursor
+  - firefox
+  - gemini
+  - githooks
+  - local-bin
+  - ssh

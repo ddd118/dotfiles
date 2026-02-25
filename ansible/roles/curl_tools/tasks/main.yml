@@ -1,0 +1,39 @@
+---
+# --- Claude CLI ---
+- name: Check if claude is installed
+  ansible.builtin.command: which claude
+  register: claude_check
+  changed_when: false
+  failed_when: false
+
+- name: Install Claude CLI
+  ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | sh
+  args:
+    creates: "{{ ansible_env.HOME }}/.claude/local/bin/claude"
+  when: claude_check.rc != 0
+
+# --- uv (Python package manager) ---
+- name: Check if uv is installed
+  ansible.builtin.command: which uv
+  register: uv_check
+  changed_when: false
+  failed_when: false
+
+- name: Install uv
+  ansible.builtin.shell: curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    creates: "{{ ansible_env.HOME }}/.local/bin/uv"
+  when: uv_check.rc != 0
+
+# --- vim-plug ---
+- name: Ensure vim autoload directory
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.vim/autoload"
+    state: directory
+    mode: "0755"
+
+- name: Install vim-plug
+  ansible.builtin.get_url:
+    url: "{{ vim_plug_url }}"
+    dest: "{{ ansible_env.HOME }}/.vim/autoload/plug.vim"
+    mode: "0644"

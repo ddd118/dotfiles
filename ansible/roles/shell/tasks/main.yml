@@ -1,0 +1,16 @@
+---
+- name: Include bat symlink setup
+  ansible.builtin.include_tasks: bat_symlink.yml
+  tags: [shell, bat]
+
+- name: Include oh-my-zsh setup
+  ansible.builtin.include_tasks: ohmyzsh.yml
+  tags: [shell, ohmyzsh]
+
+- name: Include zsh plugins setup
+  ansible.builtin.include_tasks: plugins.yml
+  tags: [shell, zsh-plugins]
+
+- name: Include git-gtr setup
+  ansible.builtin.include_tasks: git_gtr.yml
+  tags: [shell, git-gtr]

@@ -1,0 +1,65 @@
+---
+- name: Check if dotnet is installed
+  ansible.builtin.command: which dotnet
+  register: dotnet_check
+  changed_when: false
+  failed_when: false
+
+- name: Install .NET SDK (Ubuntu/Mint)
+  when: dotnet_check.rc != 0 and ansible_distribution in ['Ubuntu', 'Linux Mint']
+  block:
+    - name: Add dotnet backports PPA
+      ansible.builtin.apt_repository:
+        repo: ppa:dotnet/backports
+        state: present
+      become: true
+
+    - name: Install .NET SDK
+      ansible.builtin.apt:
+        name: "dotnet-sdk-{{ dotnet_sdk_version }}"
+        state: present
+        update_cache: true
+      become: true
+
+- name: Install .NET SDK (Debian)
+  when: dotnet_check.rc != 0 and ansible_distribution == 'Debian'
+  block:
+    - name: Download Microsoft GPG key
+      ansible.builtin.get_url:
+        url: https://packages.microsoft.com/keys/microsoft.asc
+        dest: /tmp/microsoft.asc
+        mode: "0644"
+
+    - name: Dearmor Microsoft GPG key
+      ansible.builtin.shell: gpg --dearmor < /tmp/microsoft.asc > /tmp/microsoft.asc.gpg
+      args:
+        creates: /tmp/microsoft.asc.gpg
+
+    - name: Download Microsoft prod.list
+      ansible.builtin.get_url:
+        url: "https://packages.microsoft.com/config/debian/{{ ansible_distribution_version }}/prod.list"
+        dest: /etc/apt/sources.list.d/microsoft-prod.list
+        mode: "0644"
+      become: true
+
+    - name: Ensure keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+      become: true
+
+    - name: Install Microsoft keyring
+      ansible.builtin.copy:
+        src: /tmp/microsoft.asc.gpg
+        dest: /etc/apt/keyrings/microsoft-prod.gpg
+        mode: "0644"
+        remote_src: true
+      become: true
+
+    - name: Install .NET SDK
+      ansible.builtin.apt:
+        name: "dotnet-sdk-{{ dotnet_sdk_version }}"
+        state: present
+        update_cache: true
+      become: true

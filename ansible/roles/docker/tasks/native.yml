@@ -1,0 +1,65 @@
+---
+- name: Check if docker is installed
+  ansible.builtin.command: which docker
+  register: docker_check
+  changed_when: false
+  failed_when: false
+
+- name: Install Docker Engine
+  when: docker_check.rc != 0
+  block:
+    - name: Remove conflicting Docker packages
+      ansible.builtin.apt:
+        name: "{{ docker_conflicting_packages }}"
+        state: absent
+      become: true
+      failed_when: false
+
+    - name: Ensure apt keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+      become: true
+
+    - name: Download Docker GPG key
+      ansible.builtin.get_url:
+        url: "https://download.docker.com/linux/{{ docker_repo_os }}/gpg"
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+      become: true
+
+    - name: Add Docker repository (DEB822)
+      ansible.builtin.template:
+        src: docker.sources.j2
+        dest: /etc/apt/sources.list.d/docker.sources
+        mode: "0644"
+      become: true
+
+    - name: Install Docker packages
+      ansible.builtin.apt:
+        name: "{{ docker_packages }}"
+        state: present
+        update_cache: true
+      become: true
+
+- name: Enable and start Docker service
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+  become: true
+  failed_when: false
+
+- name: Ensure docker group exists
+  ansible.builtin.group:
+    name: docker
+    state: present
+  become: true
+
+- name: Add user to docker group
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    groups: docker
+    append: true
+  become: true

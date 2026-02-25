@@ -1,0 +1,18 @@
+docker_repo_os: "{{ 'ubuntu' if ansible_distribution in ['Ubuntu', 'Linux Mint'] else 'debian' }}"
+docker_suite: "{{ ansible_distribution_release }}"
+
+docker_conflicting_packages:
+  - docker.io
+  - docker-compose
+  - docker-compose-v2
+  - docker-doc
+  - podman-docker
+  - containerd
+  - runc
+
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin

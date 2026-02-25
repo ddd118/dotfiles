@@ -1,0 +1,3 @@
+systemd_wsl_services:
+  - archive-wsl-sync.service
+  - win3845-tunnel.service

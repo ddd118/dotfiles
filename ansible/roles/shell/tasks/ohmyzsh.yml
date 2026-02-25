@@ -1,0 +1,14 @@
+---
+- name: Clone oh-my-zsh
+  ansible.builtin.git:
+    repo: https://github.com/ohmyzsh/ohmyzsh.git
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh"
+    depth: 1
+    version: master
+
+- name: Clone powerlevel10k
+  ansible.builtin.git:
+    repo: https://github.com/romkatv/powerlevel10k.git
+    dest: "{{ zsh_custom }}/themes/powerlevel10k"
+    depth: 1
+    version: master

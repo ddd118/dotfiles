@@ -1,0 +1,99 @@
+---
+# --- VS Code ---
+- name: Install VS Code
+  when: install_vscode | bool
+  block:
+    - name: Check if VS Code is installed
+      ansible.builtin.command: which code
+      register: code_check
+      changed_when: false
+      failed_when: false
+
+    - name: Setup VS Code repository
+      when: code_check.rc != 0
+      block:
+        - name: Download Microsoft GPG key for VS Code
+          ansible.builtin.shell: |
+            wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft-vscode.gpg
+          args:
+            creates: /tmp/microsoft-vscode.gpg
+
+        - name: Install Microsoft GPG key
+          ansible.builtin.copy:
+            src: /tmp/microsoft-vscode.gpg
+            dest: /usr/share/keyrings/microsoft.gpg
+            owner: root
+            group: root
+            mode: "0644"
+            remote_src: true
+          become: true
+
+        - name: Add VS Code repository (DEB822)
+          ansible.builtin.copy:
+            content: |
+              Types: deb
+              URIs: https://packages.microsoft.com/repos/code
+              Suites: stable
+              Components: main
+              Architectures: amd64,arm64,armhf
+              Signed-By: /usr/share/keyrings/microsoft.gpg
+            dest: /etc/apt/sources.list.d/vscode.sources
+            mode: "0644"
+          become: true
+
+        - name: Install VS Code
+          ansible.builtin.apt:
+            name: code
+            state: present
+            update_cache: true
+          become: true
+
+# --- Cursor ---
+- name: Display Cursor download info
+  ansible.builtin.debug:
+    msg: |
+      Cursor は公式の署名付き APT がないため自動インストールしません。
+      公式サイトからダウンロード: https://cursor.com/ja/download
+      ダウンロード後: sudo apt install ./cursor*.deb
+  when: install_cursor | bool
+
+# --- Google Antigravity ---
+- name: Install Antigravity
+  when: install_antigravity | bool
+  block:
+    - name: Check if antigravity is installed
+      ansible.builtin.command: which antigravity
+      register: antigravity_check
+      changed_when: false
+      failed_when: false
+
+    - name: Setup Antigravity repository
+      when: antigravity_check.rc != 0
+      block:
+        - name: Ensure apt keyrings directory
+          ansible.builtin.file:
+            path: /etc/apt/keyrings
+            state: directory
+            mode: "0755"
+          become: true
+
+        - name: Download Antigravity GPG key
+          ansible.builtin.shell: |
+            curl -fsSL https://us-central1-apt.pkg.dev/doc/repo-signing-key.gpg | gpg --dearmor -o /etc/apt/keyrings/antigravity-repo-key.gpg
+          args:
+            creates: /etc/apt/keyrings/antigravity-repo-key.gpg
+          become: true
+
+        - name: Add Antigravity repository
+          ansible.builtin.copy:
+            content: "deb [arch=amd64 signed-by=/etc/apt/keyrings/antigravity-repo-key.gpg] https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev/ antigravity-debian main"
+            dest: /etc/apt/sources.list.d/antigravity.list
+            mode: "0644"
+          become: true
+
+        - name: Install Antigravity
+          ansible.builtin.apt:
+            name: antigravity
+            state: present
+            update_cache: true
+          become: true

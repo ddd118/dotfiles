@@ -12,9 +12,8 @@ Linux の初期セットアップ用プロジェクト
 
 ```
 stow/           ... Stow パッケージ群（dotfiles, claude, config 等）
-ansible/        ... Ansible playbook・roles（後日実装）
+ansible/        ... Ansible playbook・roles
 scripts/        ... 再利用性のあるユーティリティスクリプト
-init-v*.sh      ... レガシーセットアップスクリプト
 ```
 
 ## セットアップ
@@ -25,10 +24,20 @@ init-v*.sh      ... レガシーセットアップスクリプト
 stow -d stow -t ~ dotfiles claude codex config cursor firefox gemini githooks local-bin ssh
 ```
 
-### フルセットアップ（後日実装）
+### フルセットアップ
 
 ```bash
+# bootstrap（Ansible 未インストールなら自動インストール）
+./setup.sh
+
+# または直接実行
 ansible-playbook ansible/site.yml
+
+# タグで選択実行
+ansible-playbook ansible/site.yml --tags "stow,shell"
+
+# オプション変更
+ansible-playbook ansible/site.yml -e "install_docker=false"
 ```
 
 ## 機能一覧と実装状況
@@ -36,39 +45,39 @@ ansible-playbook ansible/site.yml
 ### packages（パッケージインストール）
 
 - [x] apt 基本パッケージ（zsh, fzf, zoxide, bat, xclip 等）
-- [ ] apt 追加パッケージ（autossh, jq, language-pack-ja, ripgrep, shellcheck, shfmt 等）
-- [ ] curl インストール（claude CLI, uv, vim-plug）
+- [x] apt 追加パッケージ（autossh, jq, language-pack-ja, ripgrep, shellcheck, shfmt 等）
+- [x] curl インストール（claude CLI, uv, vim-plug）
 
 ### shell（シェル設定）
 
 - [x] oh-my-zsh + powerlevel10k + プラグイン
-- [ ] zsh をデフォルトシェルに変更
+- [x] zsh をデフォルトシェルに変更
 - [ ] pnpm 補完ファイル作成
 - [x] git-gtr 補完ファイル
 
 ### stow（シンボリックリンク管理）
 
-- [ ] dotfiles のシンボリックリンク作成
-- [ ] .claude, .codex, .config 等のシンボリックリンク作成
-- [ ] .ssh/conf.local の空ファイル生成
+- [x] dotfiles のシンボリックリンク作成
+- [x] .claude, .codex, .config 等のシンボリックリンク作成
+- [x] .ssh/conf.local の空ファイル生成
 
 ### node（Node.js ツール）
 
 - [x] volta + node + pnpm
-- [ ] グローバルツール（@devcontainers/cli, @google/gemini-cli, @openai/codex, @vscode/vsce）
+- [x] グローバルツール（@devcontainers/cli, @google/gemini-cli, @openai/codex, @vscode/vsce）
 
 ### textlint
 
-- [ ] .local/share/textlint-hub セットアップ
+- [x] .local/share/textlint-hub セットアップ
 
 ### yazi
 
-- [ ] clone & cargo build
-- [ ] プラグイン・テーマ導入（full-border, catppuccin-macchiato, catppuccin-latte）
+- [x] clone & cargo build
+- [x] プラグイン・テーマ導入（full-border, catppuccin-macchiato, catppuccin-latte）
 
 ### その他
 
-- [ ] インターネットダウンロードが必要な .deb パッケージの URL 表示
+- [x] インターネットダウンロードが必要な .deb パッケージの URL 表示
 
 ## yazi のコンテナ向けビルドコマンド
 

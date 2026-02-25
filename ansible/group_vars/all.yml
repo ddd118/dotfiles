@@ -1,0 +1,30 @@
+# ==================================================
+# 環境検出（自動設定 - 書き換え不要）
+# ==================================================
+is_wsl: >-
+  {{
+    ansible_env.WSL_DISTRO_NAME is defined or
+    (lookup('file', '/proc/version', errors='ignore') | default('') is regex('(?i)microsoft'))
+  }}
+
+# ==================================================
+# オプショナルコンポーネント
+# コマンドラインで上書き可: -e "install_docker=false"
+# ==================================================
+install_docker: true
+install_dotnet: true
+install_gui_apps: "{{ not is_wsl }}"
+install_vscode: "{{ install_gui_apps }}"
+install_cursor: "{{ install_gui_apps }}"
+install_antigravity: "{{ install_gui_apps }}"
+set_zsh_default: false
+
+# ==================================================
+# バージョン設定
+# ==================================================
+dotnet_sdk_version: "8.0"
+
+# ==================================================
+# リポジトリパス
+# ==================================================
+settings_repo: "{{ playbook_dir | dirname }}"
