@@ -4,3 +4,8 @@ result-*
 
 # Ignore automatically generated direnv output
 .direnv
+
+# Ignore editor swap files
+*.patch
+*.diff
+*.zip
