@@ -5,10 +5,34 @@
     state: directory
     mode: "0755"
 
+- name: Check systemd user instance availability
+  # Dev Container / WSL(systemd 無効) などでは systemctl --user が使えず失敗する。
+  # その場合は systemd 関連のタスクをスキップして playbook 全体は通す。
+  ansible.builtin.command: systemctl --user show-environment
+  register: systemd_user_check
+  changed_when: false
+  failed_when: false
+
+- name: Set systemd availability fact
+  ansible.builtin.set_fact:
+    systemd_user_available: "{{ systemd_user_check.rc == 0 }}"
+  changed_when: false
+
+- name: Explain why systemd tasks are skipped
+  ansible.builtin.debug:
+    msg: |
+      systemd --user が利用できないため、systemd 関連のタスクをスキップします。
+      (典型例: Dev Container / systemd 無効の WSL)
+      rc={{ systemd_user_check.rc }}
+      stderr={{ systemd_user_check.stderr | default('') }}
+  when: not (systemd_user_available | bool)
+  tags: [always]
+
 - name: Reload systemd user daemon
   ansible.builtin.systemd:
     daemon_reload: true
     scope: user
+  when: systemd_user_available | bool
 
 - name: Enable systemd user services (WSL)
   ansible.builtin.systemd:
@@ -16,5 +40,8 @@
     enabled: true
     scope: user
   loop: "{{ systemd_wsl_services }}"
-  when: is_wsl | bool
+  when:
+    - is_wsl | bool
+    - systemd_user_available | bool
+    - enable_wsl_user_services | default(true) | bool
   failed_when: false

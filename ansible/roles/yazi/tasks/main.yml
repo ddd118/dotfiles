@@ -33,6 +33,14 @@
       environment:
         PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
 
+- name: Check if ya command is available
+  # yazi のインストール方法によっては "ya" が ~/.cargo/bin に存在しないことがある。
+  # その場合は plugin の追加をスキップする。
+  ansible.builtin.command: "{{ ansible_env.HOME }}/.cargo/bin/ya --version"
+  register: ya_check
+  changed_when: false
+  failed_when: false
+
 - name: Install yazi plugins
   ansible.builtin.command:
     cmd: "{{ ansible_env.HOME }}/.cargo/bin/ya pkg add {{ item }}"
@@ -40,5 +48,17 @@
   environment:
     PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
   register: ya_pkg
-  changed_when: "'already' not in (ya_pkg.stderr | default(''))"
+  # ya pkg add は "already installed" を stderr に出すことがあるが、
+  # ループ + register の場合、changed 判定を精緻にするより "常に変更なし" として扱う。
+  changed_when: false
   failed_when: false
+  when: ya_check.rc == 0
+
+- name: Explain why yazi plugin installation is skipped
+  ansible.builtin.debug:
+    msg: |
+      "ya" コマンドが見つからないため yazi plugin の追加をスキップします。
+      (yazi を apt/snap/binary で入れている場合など)
+  when:
+    - ya_check.rc != 0
+    - yazi_plugins | length > 0
