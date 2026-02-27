@@ -148,7 +148,10 @@ else
 fi
 
 # compdef 使う補完は compinit の後に書く
-eval "$(codex completion zsh)"
+# codex が無い環境(セットアップ途中等)でも起動時エラーを出さない
+if command -v codex >/dev/null 2>&1; then
+  eval "$(codex completion zsh)"
+fi
 
 # ------------------------------------------------------------
 # setopt（WSL時代のやつから “安全で便利” 寄りを統合）
@@ -308,7 +311,7 @@ if ! is_container; then
 fi
 
 # WSL限定関数
-if is_wsl command -v powershell.exe >/dev/null 2>&1; then
+if is_wsl && command -v powershell.exe >/dev/null 2>&1; then
   # クリップボードの中身をログに出力する
   cb2log () {
     local out="${1:-logs/$(date +%Y%m%d-%H%M%S).log}"
