@@ -7,6 +7,10 @@
   ansible.builtin.include_tasks: apt_base.yml
   tags: [packages, apt]
 
+- name: Include locale setup
+  ansible.builtin.include_tasks: locale.yml
+  tags: [packages, locale]
+
 - name: Include wslu setup (WSL only)
   ansible.builtin.include_tasks: wslu.yml
   when: is_wsl | bool

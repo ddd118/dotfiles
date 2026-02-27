@@ -7,6 +7,19 @@
 
 - name: Install base packages
   ansible.builtin.apt:
-    name: "{{ apt_base_packages + apt_additional_packages }}"
+    name: >-
+      {{
+        (apt_base_packages + apt_additional_packages)
+        | difference(apt_container_exclude_packages if (is_container | default(false) | bool) else [])
+      }}
     state: present
   become: true
+
+- name: Install Ubuntu-only packages
+  ansible.builtin.apt:
+    name: "{{ apt_ubuntu_only_packages }}"
+    state: present
+  become: true
+  when:
+    - apt_ubuntu_only_packages is defined
+    - ansible_distribution in ['Ubuntu', 'Linux Mint']

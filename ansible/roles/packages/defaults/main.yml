@@ -15,13 +15,16 @@ apt_base_packages:
   - zoxide
   - bat
   - xclip
+  # locale の生成/設定に必要 (特に Debian/最小コンテナ)
+  - locales
   - python3
+  # Ansible apt モジュールが python3-apt を要求することがある
+  - python3-apt
   - python3-pip
 
 apt_additional_packages:
   - autossh
   - jq
-  - language-pack-ja
   - ripgrep
   - shellcheck
   - shfmt
@@ -30,5 +33,18 @@ apt_additional_packages:
   - peco
   - poppler-utils
   - python3-venv
+  # Rust 製ツールをソースからビルドする際に必要 (例: yazi)
+  - build-essential
+  - pkg-config
   - zip
   - stow
+
+# Ubuntu のみ存在する/依存関係が異なるパッケージ
+apt_ubuntu_only_packages:
+  # Ubuntu の翻訳パック。Debian には "language-pack-*" が無い。
+  - language-pack-ja
+
+# コンテナでは不要/邪魔になりがちなパッケージを除外する。
+# (例: openssh-server は service 起動が絡んで失敗要因になりやすい)
+apt_container_exclude_packages:
+  - openssh-server
