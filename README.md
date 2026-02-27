@@ -30,6 +30,9 @@ stow -d stow -t ~ dotfiles claude codex config cursor firefox gemini githooks lo
 # bootstrap（Ansible 未インストールなら自動インストール）
 ./setup.sh
 
+# Dev Container / Codespaces 用（install.sh は setup.sh に委譲）
+./install.sh
+
 # または直接実行
 ansible-playbook ansible/site.yml
 
@@ -45,7 +48,9 @@ ansible-playbook ansible/site.yml -e "install_docker=false"
 ### packages（パッケージインストール）
 
 - [x] apt 基本パッケージ（zsh, fzf, zoxide, bat, xclip 等）
-- [x] apt 追加パッケージ（autossh, jq, language-pack-ja, ripgrep, shellcheck, shfmt 等）
+- [x] apt 追加パッケージ（autossh, jq, ripgrep, shellcheck, shfmt 等）
+- [x] locale 設定（ja_JP.UTF-8 を生成 / デフォルト LANG を設定）
+- [x] Ubuntu のみ: language-pack-ja をインストール
 - [x] curl インストール（claude CLI, uv, vim-plug）
 
 ### shell（シェル設定）
@@ -91,4 +96,35 @@ docker run --rm -it \
   bash -lc 'apt-get update &&
             apt-get install -y --no-install-recommends pkg-config libssl-dev ca-certificates &&
             cargo install --path . --locked --root /out'
+```
+
+## 依存を追加したいとき（入り口）
+
+用途ごとに追加場所が分かれています。
+
+- **apt パッケージを追加したい**
+  - `ansible/roles/packages/defaults/main.yml`
+    - `apt_base_packages` / `apt_additional_packages`
+    - Ubuntu のみ: `apt_ubuntu_only_packages`
+    - コンテナでは除外: `apt_container_exclude_packages`
+- **Node のグローバルツールを追加したい**
+  - `ansible/roles/node/defaults/main.yml` の `volta_global_tools`
+- **curl で入れるツールを追加したい**
+  - `ansible/roles/curl_tools/tasks/main.yml`
+- **stow でリンクするパッケージを増やしたい**
+  - `ansible/roles/stow/defaults/main.yml` の `stow_packages`
+
+## Dev Container dotfiles として使う
+
+VS Code Dev Containers の dotfiles 機能は、dotfiles リポジトリを clone した後に
+`install.sh` / `setup.sh` などの bootstrap script を実行できます。
+
+例: VS Code の User Settings (`settings.json`) に追加
+
+```json
+{
+  "dotfiles.repository": "your-github-id/your-dotfiles-repo",
+  "dotfiles.targetPath": "~/dotfiles",
+  "dotfiles.installCommand": "install.sh"
+}
 ```
