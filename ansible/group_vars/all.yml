@@ -7,17 +7,37 @@ is_wsl: >-
     (lookup('file', '/proc/version', errors='ignore') | default('') is regex('(?i)microsoft'))
   }}
 
+# Docker / Dev Container など "コンテナ内" 判定
+# - Dev Container では systemd が無い/動かないケースが多く、
+#   docker/systemd/gui 系のセットアップが失敗しやすいので、
+#   後続の optional フラグのデフォルト値を切り替えるために使う。
+is_container: >-
+  {{
+    (lookup('file', '/.dockerenv', errors='ignore') | default('') | length > 0) or
+    (lookup('file', '/run/.containerenv', errors='ignore') | default('') | length > 0) or
+    (ansible_virtualization_type | default('')) in ['docker', 'containerd', 'podman', 'lxc', 'systemd-nspawn'] or
+    ansible_env.REMOTE_CONTAINERS is defined or
+    ansible_env.DEVCONTAINER is defined or
+    ansible_env.CODESPACES is defined
+  }}
+
 # ==================================================
 # オプショナルコンポーネント
 # コマンドラインで上書き可: -e "install_docker=false"
 # ==================================================
-install_docker: true
-install_dotnet: true
-install_gui_apps: "{{ not is_wsl }}"
+allow_root: false
+
+install_docker: "{{ not is_container }}"
+install_dotnet: "{{ not is_container }}"
+install_gui_apps: "{{ (not is_wsl) and (not is_container) }}"
 install_vscode: "{{ install_gui_apps }}"
 install_cursor: "{{ install_gui_apps }}"
 install_antigravity: "{{ install_gui_apps }}"
 set_zsh_default: false
+
+# WSL 上で systemd --user を使ってサービスを enable するか。
+# - 個人用途のサービスが含まれることが多いため、環境に合わせて OFF にできます。
+enable_wsl_user_services: true
 
 # ==================================================
 # バージョン設定

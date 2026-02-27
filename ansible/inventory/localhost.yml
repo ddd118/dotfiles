@@ -2,4 +2,10 @@ all:
   hosts:
     localhost:
       ansible_connection: local
-      ansible_python_interpreter: "{{ ansible_playbook_python }}"
+      # NOTE:
+      # - ansible_playbook_python (実行環境の Python) を使うと、
+      #   venv/pipx で Ansible を入れた時に apt モジュールが python3-apt を見つけられず
+      #   失敗するケースがあります。
+      # - "auto_silent" にするとターゲット側(=ローカル)の Python を自動選択し、
+      #   Debian/Ubuntu 系でよくある python3-apt 問題を回避しやすくなります。
+      ansible_python_interpreter: auto_silent

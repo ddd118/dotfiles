@@ -5,13 +5,6 @@
   gather_facts: true
 
   pre_tasks:
-    - name: Verify not running as root
-      ansible.builtin.assert:
-        that:
-          - ansible_user_id != 'root'
-        fail_msg: "root では実行しないでください。通常ユーザーで実行してください。"
-      tags: [always]
-
     - name: Detect WSL environment
       ansible.builtin.set_fact:
         is_wsl: >-
@@ -21,10 +14,46 @@
           }}
       tags: [always]
 
+    - name: Detect container environment
+      ansible.builtin.set_fact:
+        is_container: >-
+          {{
+            (lookup('file', '/.dockerenv', errors='ignore') | default('') | length > 0) or
+            (lookup('file', '/run/.containerenv', errors='ignore') | default('') | length > 0) or
+            (ansible_virtualization_type | default('')) in ['docker', 'containerd', 'podman', 'lxc', 'systemd-nspawn'] or
+            ansible_env.REMOTE_CONTAINERS is defined or
+            ansible_env.DEVCONTAINER is defined or
+            ansible_env.CODESPACES is defined
+          }}
+      tags: [always]
+
+    - name: Verify supported OS family
+      ansible.builtin.assert:
+        that:
+          - ansible_os_family == 'Debian'
+        fail_msg: |
+          この playbook は現状 Debian/Ubuntu 系 (apt) を対象にしています。
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+      tags: [always]
+
+    - name: Verify not running as root
+      ansible.builtin.assert:
+        that:
+          # Dev Container などで root ユーザーが使われるケースがあるため、
+          # "コンテナ内" では例外的に許可する。
+          - ansible_user_id != 'root' or (allow_root | default(false) | bool) or (is_container | bool)
+        fail_msg: |
+          root では実行しないでください。通常ユーザーで実行してください。
+
+          例外:
+            - Dev Container 等で root ユーザーしか存在しない場合は許可します。
+            - どうしても root で回したい場合は "-e allow_root=true" を指定してください。
+      tags: [always]
+
     - name: Display environment info
       ansible.builtin.debug:
         msg: |
-          環境: {{ 'WSL' if is_wsl else 'ネイティブ Linux' }}
+          環境: {{ 'WSL' if is_wsl else ('コンテナ' if is_container else 'ネイティブ Linux') }}
           OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
           Codename: {{ ansible_distribution_release }}
       tags: [always]
@@ -55,6 +84,7 @@
       when: install_gui_apps | bool
     - role: systemd
       tags: [systemd]
+      when: not (is_container | bool)
 
   post_tasks:
     - name: Change default shell to zsh
