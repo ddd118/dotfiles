@@ -1,10 +1,53 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-WIN_HOST=$(ip route | awk '/^default/ {print $3}')
+
+# ------------------------------------------------------------
+# Windows 側 (通常: WSL2 の "ホスト" = default gateway) に対して
+# ローカルポート 3845 を SSH トンネルするためのユーティリティ。
+#
+# 環境依存が強いので、必要に応じて env で上書きできるようにする。
+#
+# env:
+#   WIN3845_TUNNEL_WIN_HOST           : 接続先ホスト (省略時: default gateway)
+#   WIN3845_TUNNEL_USER               : SSH ユーザー (省略時: $USER)
+#   WIN3845_TUNNEL_IDENTITY_FILE      : 秘密鍵 (省略時: $HOME/.ssh/id_ed25519)
+#   WIN3845_TUNNEL_LOCAL_PORT         : ローカル待受ポート (省略時: 3845)
+#   WIN3845_TUNNEL_REMOTE_HOST        : Windows 側の bind host (省略時: 127.0.0.1)
+#   WIN3845_TUNNEL_REMOTE_PORT        : Windows 側のポート (省略時: 3845)
+# ------------------------------------------------------------
+
+if ! command -v autossh >/dev/null 2>&1; then
+    echo "[ERROR] autossh が見つかりません (apt install autossh)" >&2
+    exit 1
+fi
+
+default_gateway_host() {
+    # WSL2 では default gateway が Windows 側ホストになることが多い
+    ip route 2>/dev/null | awk '/^default/ {print $3; exit}'
+}
+
+WIN_HOST="${WIN3845_TUNNEL_WIN_HOST:-$(default_gateway_host)}"
+SSH_USER="${WIN3845_TUNNEL_USER:-${USER}}"
+IDENTITY_FILE="${WIN3845_TUNNEL_IDENTITY_FILE:-${HOME}/.ssh/id_ed25519}"
+
+LOCAL_PORT="${WIN3845_TUNNEL_LOCAL_PORT:-3845}"
+REMOTE_HOST="${WIN3845_TUNNEL_REMOTE_HOST:-127.0.0.1}"
+REMOTE_PORT="${WIN3845_TUNNEL_REMOTE_PORT:-3845}"
+
+if [[ -z "${WIN_HOST}" ]]; then
+    echo "[ERROR] 接続先ホストが特定できません。WIN3845_TUNNEL_WIN_HOST を指定してください。" >&2
+    exit 1
+fi
+
+if [[ ! -f "${IDENTITY_FILE}" ]]; then
+    echo "[ERROR] 秘密鍵が見つかりません: ${IDENTITY_FILE}" >&2
+    echo "        WIN3845_TUNNEL_IDENTITY_FILE で上書きできます" >&2
+    exit 1
+fi
 
 exec autossh -M 0 -N \
     -o "ServerAliveInterval=30" -o "ServerAliveCountMax=3" \
     -o "ExitOnForwardFailure=yes" \
-    -i /home/zanth/.ssh/id_ed25519 \
-    -L 3845:127.0.0.1:3845 \
-    zanth@"${WIN_HOST}"
+    -i "${IDENTITY_FILE}" \
+    -L "${LOCAL_PORT}:${REMOTE_HOST}:${REMOTE_PORT}" \
+    "${SSH_USER}@${WIN_HOST}"

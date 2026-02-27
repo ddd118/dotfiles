@@ -106,7 +106,10 @@ resolve_windows_downloads_dir() {
     if [[ -n "$up_win" ]]; then
         local up_wsl
         up_wsl="$(wslpath "$up_win" 2>/dev/null || true)"
-        [[ -n "$up_wsl" ]] && { echo "$up_wsl/Downloads"; return 0; }
+        [[ -n "$up_wsl" ]] && {
+            echo "$up_wsl/Downloads"
+            return 0
+        }
     fi
 
     return 1

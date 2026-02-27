@@ -19,10 +19,10 @@ set -euo pipefail
 # * 0) コマンドチェック
 #     必要なコマンドの存在確認（git, zip, flock）
 need_cmd() {
-command -v "$1" >/dev/null 2>&1 || {
-    echo "[export] missing command: $1" >&2
-    return 1
-}
+    command -v "$1" >/dev/null 2>&1 || {
+        echo "[export] missing command: $1" >&2
+        return 1
+    }
 }
 
 need_cmd git
@@ -48,10 +48,10 @@ archive_name="${TDX_EXPORT_NAME:-tdx.zip}"
 mkdir -p "$out_dir"
 
 # アーカイブ出力と関連ファイルのパス
-out="$out_dir/$archive_name"                    # アーカイブ出力先
-lock_file="$out_dir/.tdx_export.lock"           # ロックファイル（同時実行制御用）
-pending_file="$out_dir/.tdx_export.pending"     # 保留中のコミットハッシュ記録ファイル
-last_file="$out_dir/.tdx_export.last"           # 最後に処理したコミットハッシュ記録ファイル
+out="$out_dir/$archive_name"                # アーカイブ出力先
+lock_file="$out_dir/.tdx_export.lock"       # ロックファイル（同時実行制御用）
+pending_file="$out_dir/.tdx_export.pending" # 保留中のコミットハッシュ記録ファイル
+last_file="$out_dir/.tdx_export.last"       # 最後に処理したコミットハッシュ記録ファイル
 
 # アーカイブ対象のコミットを取得
 requested_commit="${1:-HEAD}"
@@ -60,7 +60,7 @@ requested_commit="$(git -C "$repo_root" rev-parse "$requested_commit")"
 # * 3) ロック機構の初期化
 #     ノンブロッキングロックで同時実行を制御する
 #     同時にコミットされた場合は最新のコミットリクエストを常に保持
-printf '%s\n' "$requested_commit" > "$pending_file"
+printf '%s\n' "$requested_commit" >"$pending_file"
 
 # ノンブロッキングロック: 別のシェルで実行中の場合はすぐに終了する
 # ファイルディスクリプタ 9 をロック用に使用し、シェル終了まで保持
@@ -76,7 +76,8 @@ fi
 cleanup_tmp=""
 # クリーンアップ関数：一時ファイルが存在する場合に削除
 cleanup() {
-[[ -n "$cleanup_tmp" && -f "$cleanup_tmp" ]] && rm -f "$cleanup_tmp" || true
+    # shellcheck disable=SC2015
+    [[ -n "$cleanup_tmp" && -f "$cleanup_tmp" ]] && rm -f "$cleanup_tmp" || true
 }
 # シェル終了時にクリーンアップを実行
 trap cleanup EXIT
@@ -125,12 +126,12 @@ while :; do
     done
 
     # 現在のワークツリーから優先追加
-    if (( ${#extras_current[@]} )); then
+    if ((${#extras_current[@]})); then
         (cd "$repo_root" && zip -q -r -u "$tmp" "${extras_current[@]}")
     fi
 
     # 不足している場合元のワークツリーから欠落しているものを追加する
-    if (( ${#extras_original[@]} )); then
+    if ((${#extras_original[@]})); then
         (cd "$original_root" && zip -q -r -u "$tmp" "${extras_original[@]}")
     fi
 

@@ -6,7 +6,7 @@ workspace="${1:-/workspace}"
 # Run only once per container session (dotnet-watch と vue-start の両方から呼ばれても 1 回だけ出す)
 sentinel="/tmp/tdx_todo_reminded"
 if [ -f "$sentinel" ]; then
-  exit 0
+    exit 0
 fi
 touch "$sentinel" >/dev/null 2>&1 || true
 
@@ -16,19 +16,19 @@ waiting_file="${workspace}/waiting.txt"
 someday_file="${workspace}/someday.txt"
 
 if [ ! -f "$todo_file" ]; then
-  exit 0
+    exit 0
 fi
 
 today="$(date +%Y-%m-%d 2>/dev/null || echo '')"
 
 count_open() {
-  local f="$1"
-  if [ ! -f "$f" ]; then
-    echo 0
-    return
-  fi
-  # count non-empty lines not starting with x (done)
-  awk 'NF && $1 != "x" {c++} END {print c+0}' "$f" 2>/dev/null || echo 0
+    local f="$1"
+    if [ ! -f "$f" ]; then
+        echo 0
+        return
+    fi
+    # count non-empty lines not starting with x (done)
+    awk 'NF && $1 != "x" {c++} END {print c+0}' "$f" 2>/dev/null || echo 0
 }
 
 todo_open="$(count_open "$todo_file")"
@@ -49,9 +49,9 @@ echo "────────────────────────�
 max_lines=8
 
 if [ "$todo_open" -gt 0 ]; then
-  # Produce sortable lines: bucket|prio|due|task
-  # bucket: 0 overdue, 1 today, 2 future due, 3 no due
-  awk -v today="$today" '
+    # Produce sortable lines: bucket|prio|due|task
+    # bucket: 0 overdue, 1 today, 2 future due, 3 no due
+    awk -v today="$today" '
     function bucket(due, today) {
       if (due == "") return 3
       if (today == "") return 2
@@ -71,7 +71,7 @@ if [ "$todo_open" -gt 0 ]; then
       b=bucket(due, today)
       printf "%d|%s|%s|%s\n", b, prio, due, line
     }
-  ' "$todo_file"   | sort -t'|' -k1,1n -k2,2 -k3,3   | head -n "$max_lines"   | awk -F'|' '
+  ' "$todo_file" | sort -t'|' -k1,1n -k2,2 -k3,3 | head -n "$max_lines" | awk -F'|' '
       {
         b=$1; pr=$2; due=$3; task=$4;
         prefix=" "
@@ -84,7 +84,7 @@ if [ "$todo_open" -gt 0 ]; then
       }
     '
 else
-  echo "  (no open tasks in todo.txt)"
+    echo "  (no open tasks in todo.txt)"
 fi
 
 echo ""
