@@ -1,4 +1,4 @@
-# Downloads に落ちた .patch を WSL(Ubuntu) の $HOME/repos/tdx/tdx/.patch に移動する
+# Downloads に落ちた .patch を WSL(Ubuntu) の /path/to/target/.patch に移動する
 # - ダウンロード中ファイル(.crdownload/.tmp/.part)は無視
 # - ファイルサイズが安定 + 読み取りで開けることを確認してから実行（破損防止）
 # - 同名が既にWSL側にあれば何もしない（= Downloadsに残るのは許容）
@@ -80,7 +80,7 @@ if ($homeRes.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($homeRes.Text)) {
   throw "Failed to get WSL HOME. Exit=$($homeRes.ExitCode) Output=$($homeRes.Text)"
 }
 $LinuxHome = $homeRes.Text.Trim()
-$TargetLinuxDir = "$LinuxHome/repos/work/tdx/tdx/.patch"
+$TargetLinuxDir = "$LinuxHome/repos/work/tdx/.patch"
 
 # 念のため作成（ここで失敗するなら権限やWSL側の状態）
 $mkRes = Invoke-Wsl @("mkdir", "-p", $TargetLinuxDir)

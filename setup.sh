@@ -31,73 +31,94 @@ run_as_root() {
   fi
 }
 
+normalize_locale_for_ansible() {
+  # ansible 起動時に "unsupported locale setting" が出る環境向けに、
+  # 利用可能な UTF-8 ロケールへ安全に寄せる。
+  local current="${LC_ALL:-${LANG:-}}"
+  local current_alt=""
+  local available=""
+  local fallback=""
+
+  if has_cmd locale; then
+    available="$(locale -a 2>/dev/null || true)"
+  fi
+
+  case "${available}" in
+    *"ja_JP.utf8"*)
+      fallback="ja_JP.UTF-8"
+      ;;
+    *"C.UTF-8"*)
+      fallback="C.UTF-8"
+      ;;
+    *"C.utf8"*)
+      fallback="C.utf8"
+      ;;
+    *)
+      fallback="C"
+      ;;
+  esac
+
+  if [[ -z "${current}" ]]; then
+    export LANG="${fallback}"
+    export LC_ALL="${fallback}"
+    unset LANGUAGE || true
+    return 0
+  fi
+
+  # 現在値が未生成ロケールなら fallback に置き換える
+  if [[ "${current}" =~ ^(C|POSIX|C\.UTF-8|C\.utf8|ja_JP\.UTF-8|ja_JP\.utf8)$ ]]; then
+    return 0
+  fi
+
+  current_alt="${current/UTF-8/utf8}"
+  if [[ "${available}" != *"${current}"* && "${available}" != *"${current_alt}"* ]]; then
+    echo "[WARN] 現在のロケール (${current}) は利用不可のため ${fallback} を使用します。" >&2
+    export LANG="${fallback}"
+    export LC_ALL="${fallback}"
+    unset LANGUAGE || true
+  fi
+}
+
 require_apt_get() {
   if ! has_cmd apt-get; then
     cat <<'MSG' >&2
 [ERROR] apt-get が見つかりません。
-この dotfiles は Debian/Ubuntu 系 (apt-get) を前提にしています。
-
-対応案:
-  - Ubuntu/Debian 系イメージ/ディストリビューションで実行する
-  - もしくは Ansible を拡張して dnf/pacman/apk 等に対応する
+この setup.sh は Debian/Ubuntu 系（WSL含む）専用です。
+未対応環境では ansible-playbook を手動導入して実行してください。
 MSG
     return 1
   fi
 }
 
-bootstrap_ansible_if_needed() {
+install_ansible_with_apt_if_needed() {
   if has_cmd ansible-playbook; then
     return 0
   fi
 
-  echo "[INFO] ansible-playbook が見つかりません。bootstrap します..." >&2
-
-  require_apt_get
-
-  # apt-get update は -y を付けられないため注意
+  echo "[INFO] ansible-playbook が見つかりません。apt で導入します..." >&2
   run_as_root apt-get update
+  run_as_root apt-get install -y ansible || run_as_root apt-get install -y ansible-core
+}
 
-  # Ansible の apt モジュールが python3-apt を要求することがあるため、
-  # playbook 実行前に最低限の Python 系依存を揃える。
-  run_as_root apt-get install -y \
-    python3 \
-    python3-apt \
-    python3-pip \
-    python3-venv
-
-  # "pip3" 直呼びより python3 -m pip の方が環境差分に強い
-  python3 -m pip install --user --upgrade pip >/dev/null
-  python3 -m pip install --user ansible
-
-  # ~/.local/bin を PATH に通す（このスクリプト内だけでOK）
-  export PATH="$HOME/.local/bin:$PATH"
+bootstrap_ansible_if_needed() {
+  require_apt_get
+  install_ansible_with_apt_if_needed
 
   if ! has_cmd ansible-playbook; then
-    echo "[ERROR] Ansible のインストールに失敗しました。" >&2
+    echo "[ERROR] apt 経由で ansible-playbook を導入できませんでした。" >&2
     return 1
   fi
 }
 
 bootstrap_ansible_if_needed
 
-ensure_python3_apt() {
-  # Ansible の apt モジュールが python3-apt を要求することがある。
-  # 既に Ansible が入っている環境でも python3-apt が無いと playbook が落ちるため、
-  # playbook 実行前に確認して不足分だけ補う。
-  if ! has_cmd apt-get; then
-    return 0
-  fi
-
-  if dpkg -s python3-apt >/dev/null 2>&1; then
-    return 0
-  fi
-
-  echo "[INFO] python3-apt が見つかりません。apt モジュール用にインストールします..." >&2
-  run_as_root apt-get update
-  run_as_root apt-get install -y python3-apt
-}
-
-ensure_python3_apt
-
 cd "$SCRIPT_DIR"
-ansible-playbook ansible/site.yml "$@"
+normalize_locale_for_ansible
+
+ansible_args=()
+if ! is_root && has_cmd sudo && ! sudo -n true >/dev/null 2>&1; then
+  echo "[INFO] sudo パスワード入力が必要なため Ansible を -K 付きで実行します。" >&2
+  ansible_args+=("-K")
+fi
+
+ansible-playbook "${ansible_args[@]}" ansible/site.yml "$@"
