@@ -1,0 +1,11 @@
+install_plemoljp: true
+
+plemoljp_release_latest_url: https://github.com/yuru7/PlemolJP/releases/latest
+plemoljp_variant: normal # normal | nf | hs
+plemoljp_asset_filename_prefix_map:
+  normal: PlemolJP_v
+  nf: PlemolJP_NF_v
+  hs: PlemolJP_HS_v
+plemoljp_cache_dir: "{{ ansible_env.HOME }}/.cache/fonts/PlemolJP"
+plemoljp_extract_dir: "{{ plemoljp_cache_dir }}/extracted"
+plemoljp_install_dir: "{{ ansible_env.HOME }}/.local/share/fonts/PlemolJP"

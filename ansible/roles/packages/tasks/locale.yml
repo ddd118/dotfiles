@@ -1,0 +1,22 @@
+---
+- name: Ensure ja_JP.UTF-8 is enabled in locale.gen
+  ansible.builtin.lineinfile:
+    path: /etc/locale.gen
+    regexp: "^#?\\s*ja_JP\\.UTF-8\\s+UTF-8$"
+    line: "ja_JP.UTF-8 UTF-8"
+  become: true
+  register: locale_gen_entry
+
+- name: Generate locales
+  ansible.builtin.command: locale-gen
+  become: true
+  when: locale_gen_entry is changed
+
+- name: Ensure default LANG is ja_JP.UTF-8
+  ansible.builtin.lineinfile:
+    path: /etc/default/locale
+    regexp: "^LANG="
+    line: "LANG=ja_JP.UTF-8"
+    create: true
+    mode: "0644"
+  become: true

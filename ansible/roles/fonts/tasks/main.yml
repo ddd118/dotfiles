@@ -1,0 +1,115 @@
+---
+- name: Ensure font directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ plemoljp_cache_dir }}"
+    - "{{ plemoljp_extract_dir }}"
+    - "{{ plemoljp_install_dir }}"
+  when: install_plemoljp | bool
+
+- name: Resolve latest PlemolJP release tag
+  ansible.builtin.uri:
+    url: "{{ plemoljp_release_latest_url }}"
+    method: GET
+    follow_redirects: none
+    status_code: [301, 302, 307, 308]
+  register: plemoljp_latest_redirect
+  when:
+    - install_plemoljp | bool
+    - not ansible_check_mode
+
+- name: Extract latest release tag
+  ansible.builtin.set_fact:
+    plemoljp_release_tag: "{{ plemoljp_latest_redirect.location | regex_replace('.*/tag/', '') }}"
+  when:
+    - install_plemoljp | bool
+    - not ansible_check_mode
+
+- name: Select PlemolJP asset prefix
+  ansible.builtin.set_fact:
+    plemoljp_asset_prefix: "{{ plemoljp_asset_filename_prefix_map[plemoljp_variant] | default(plemoljp_asset_filename_prefix_map.normal) }}"
+  when:
+    - install_plemoljp | bool
+    - not ansible_check_mode
+
+- name: Normalize PlemolJP release version
+  ansible.builtin.set_fact:
+    plemoljp_release_version: "{{ plemoljp_release_tag | regex_replace('^v', '') }}"
+  when:
+    - install_plemoljp | bool
+    - not ansible_check_mode
+
+- name: Build PlemolJP archive filename
+  ansible.builtin.set_fact:
+    plemoljp_asset_name: "{{ plemoljp_asset_prefix }}{{ plemoljp_release_version }}.zip"
+  when:
+    - install_plemoljp | bool
+    - not ansible_check_mode
+
+- name: Build PlemolJP archive URL
+  ansible.builtin.set_fact:
+    plemoljp_asset_download_url: "https://github.com/yuru7/PlemolJP/releases/download/{{ plemoljp_release_tag }}/{{ plemoljp_asset_name }}"
+  when:
+    - install_plemoljp | bool
+    - not ansible_check_mode
+
+- name: Download PlemolJP release archive
+  ansible.builtin.get_url:
+    url: "{{ plemoljp_asset_download_url }}"
+    dest: "{{ plemoljp_cache_dir }}/{{ plemoljp_asset_name }}"
+    mode: "0644"
+  when:
+    - install_plemoljp | bool
+    - not ansible_check_mode
+
+- name: Extract PlemolJP release archive
+  ansible.builtin.unarchive:
+    src: "{{ plemoljp_cache_dir }}/{{ plemoljp_asset_name }}"
+    dest: "{{ plemoljp_extract_dir }}"
+    remote_src: true
+  when:
+    - install_plemoljp | bool
+    - not ansible_check_mode
+
+- name: Find installable font files
+  ansible.builtin.find:
+    paths: "{{ plemoljp_extract_dir }}"
+    patterns:
+      - "*.ttf"
+      - "*.otf"
+    recurse: true
+  register: plemoljp_font_files
+  when:
+    - install_plemoljp | bool
+    - not ansible_check_mode
+
+- name: Install PlemolJP font files
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "{{ plemoljp_install_dir }}/{{ item.path | basename }}"
+    mode: "0644"
+    remote_src: true
+  loop: "{{ plemoljp_font_files.files | default([]) }}"
+  when:
+    - install_plemoljp | bool
+    - not ansible_check_mode
+    - (plemoljp_font_files.matched | default(0)) > 0
+
+- name: Refresh font cache
+  ansible.builtin.command: fc-cache -f "{{ ansible_env.HOME }}/.local/share/fonts"
+  changed_when: false
+  when:
+    - install_plemoljp | bool
+    - not ansible_check_mode
+
+- name: Display Windows font notice on WSL
+  ansible.builtin.debug:
+    msg: |
+      WSL 上で Linux 側フォントは導入しました。
+      Windows Terminal など Windows 側アプリで使う場合は、Windows 側にも同フォントをインストールしてください。
+  when:
+    - install_plemoljp | bool
+    - is_wsl | bool

@@ -1,0 +1,14 @@
+mise_bin: "{{ ansible_env.HOME }}/.local/bin/mise"
+mise_data_dir: "{{ ansible_env.HOME }}/.local/share/mise"
+
+mise_env:
+  PATH: "{{ ansible_env.HOME }}/.local/bin:{{ mise_data_dir }}/shims:{{ ansible_env.PATH }}"
+
+# Node/npm/pnpm は Volta ロールで管理するため、ここには含めない。
+mise_runtime_versions:
+  - name: python
+    version: "latest"
+  - name: go
+    version: "latest"
+  - name: ruby
+    version: "latest"

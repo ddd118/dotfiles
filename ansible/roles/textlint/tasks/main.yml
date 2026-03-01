@@ -17,7 +17,9 @@
   environment:
     VOLTA_HOME: "{{ ansible_env.HOME }}/.volta"
     PATH: "{{ ansible_env.HOME }}/.volta/bin:{{ ansible_env.PATH }}"
-  when: not textlint_pkg.stat.exists
+  when:
+    - not ansible_check_mode
+    - not textlint_pkg.stat.exists
 
 - name: Install textlint packages
   ansible.builtin.command:
@@ -28,3 +30,4 @@
     PATH: "{{ ansible_env.HOME }}/.volta/bin:{{ ansible_env.PATH }}"
   register: textlint_install
   changed_when: "'added' in textlint_install.stdout"
+  when: not ansible_check_mode

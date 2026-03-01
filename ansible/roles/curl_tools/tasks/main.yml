@@ -26,6 +26,11 @@
   when: uv_check.rc != 0
 
 # --- vim-plug ---
+- name: Check vim autoload directory
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.vim/autoload"
+  register: vim_autoload_dir
+
 - name: Ensure vim autoload directory
   ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/.vim/autoload"
@@ -37,3 +42,4 @@
     url: "{{ vim_plug_url }}"
     dest: "{{ ansible_env.HOME }}/.vim/autoload/plug.vim"
     mode: "0644"
+  when: (not ansible_check_mode) or (vim_autoload_dir.stat.exists | default(false))

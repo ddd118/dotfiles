@@ -30,6 +30,8 @@ allow_root: false
 install_docker: "{{ not is_container }}"
 install_dotnet: "{{ not is_container }}"
 install_gui_apps: "{{ (not is_wsl) and (not is_container) }}"
+install_fonts: "{{ (not is_wsl) and (not is_container) }}"
+install_mise: true
 install_vscode: "{{ install_gui_apps }}"
 install_cursor: "{{ install_gui_apps }}"
 install_antigravity: "{{ install_gui_apps }}"
@@ -43,6 +45,15 @@ enable_wsl_user_services: true
 # バージョン設定
 # ==================================================
 dotnet_sdk_version: "8.0"
+
+# Node.js / npm / pnpm は Volta ロールで管理し、mise では管理しない。
+mise_runtime_versions:
+  - name: python
+    version: "latest"
+  - name: go
+    version: "latest"
+  - name: ruby
+    version: "latest"
 
 # ==================================================
 # リポジトリパス

@@ -1,0 +1,27 @@
+---
+- name: Check if mise is installed
+  ansible.builtin.stat:
+    path: "{{ mise_bin }}"
+  register: mise_stat
+
+- name: Install mise
+  ansible.builtin.shell: curl https://mise.run | sh
+  args:
+    creates: "{{ mise_bin }}"
+  when:
+    - not ansible_check_mode
+    - not mise_stat.stat.exists
+
+- name: Install configured runtimes with mise
+  ansible.builtin.command: "{{ mise_bin }} install {{ item.name }}@{{ item.version }}"
+  environment: "{{ mise_env }}"
+  loop: "{{ mise_runtime_versions }}"
+  changed_when: false
+  when: (not ansible_check_mode) or mise_stat.stat.exists
+
+- name: Set global runtime versions with mise
+  ansible.builtin.command: "{{ mise_bin }} use -g {{ item.name }}@{{ item.version }}"
+  environment: "{{ mise_env }}"
+  loop: "{{ mise_runtime_versions }}"
+  changed_when: false
+  when: (not ansible_check_mode) or mise_stat.stat.exists
