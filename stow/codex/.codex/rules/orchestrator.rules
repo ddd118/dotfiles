@@ -1,0 +1,4 @@
+# Orchestrator-specific rules
+#
+# This repository currently has no `.codex/orchestrator/*.sh` scripts.
+# Add explicit prefix_rule entries only when orchestrator scripts are introduced.

@@ -1,0 +1,34 @@
+# Default rules shared across projects.
+# Keep this file generic and safe; project-specific rules should live elsewhere.
+
+# Allow common .NET build/test commands outside the sandbox without prompting.
+prefix_rule(
+    pattern = ["dotnet", ["build", "test"]],
+    decision = "allow",
+    justification = "Allow local build/test without approval prompts",
+    match = [
+        "dotnet build",
+        "dotnet build MySolution.sln -c Release",
+        "dotnet test",
+        "dotnet test MyProject.Tests/MyProject.Tests.csproj",
+    ],
+)
+
+# Allow npm build/test scripts outside the sandbox without prompting.
+prefix_rule(
+    pattern = ["npm", "run", ["build", "test"]],
+    decision = "allow",
+    justification = "Allow project build/test scripts without approval prompts",
+    match = [
+        "npm run build",
+        "npm run build -- --mode production",
+        "npm run test",
+    ],
+    not_match = [
+        # This should NOT match because the 3rd arg isn't exactly "build" or "test".
+        "npm run build:prod",
+    ],
+)
+
+# Allow package install for JS projects.
+prefix_rule(pattern = ["pnpm", "install"], decision = "allow")
