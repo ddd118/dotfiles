@@ -6,7 +6,7 @@ Linux の初期セットアップ用プロジェクト
 
 - **パッケージ管理**: Ansible（宣言的セットアップ）
 - **dotfiles 管理**: GNU Stow（シンボリックリンク）
-- **対象環境**: WSL2 (Ubuntu/Debian), ネイティブ Linux, Devcontainer
+- **対象環境**: WSL2 (Ubuntu/Debian), Debian/Ubuntu 系 Linux, Devcontainer
 
 ## ディレクトリ構成
 
@@ -28,6 +28,7 @@ stow -d stow -t ~ dotfiles claude codex config cursor firefox gemini githooks lo
 
 ```bash
 # bootstrap（Ansible 未インストールなら自動インストール）
+# ※ setup.sh の自動導入は apt-get が使える Debian/Ubuntu 系のみ対応
 ./setup.sh
 
 # Dev Container / Codespaces 用（install.sh は setup.sh に委譲）
@@ -71,6 +72,18 @@ ansible-playbook ansible/site.yml -e "install_docker=false"
 - [x] volta + node + pnpm
 - [x] グローバルツール（@devcontainers/cli, @google/gemini-cli, @openai/codex, @vscode/vsce）
 
+### mise（言語ランタイム）
+
+- [x] mise 本体の導入
+- [x] グローバルランタイム（python, go, ruby）
+- [x] Node.js / npm / pnpm は Volta 側で管理（mise 対象外）
+- [x] 個人用セットアップ前提で `latest` を利用（再現性は各プロジェクトの Dockerfile / lockfile 側で担保）
+
+### fonts（フォント）
+
+- [x] PlemolJP を Linux 側フォントとして導入
+- [x] WSL では Windows 側アプリ用フォント導入の注意メッセージを表示
+
 ### textlint
 
 - [x] .local/share/textlint-hub セットアップ
@@ -108,7 +121,9 @@ docker run --rm -it \
     - Ubuntu のみ: `apt_ubuntu_only_packages`
     - コンテナでは除外: `apt_container_exclude_packages`
 - **Node のグローバルツールを追加したい**
-  - `ansible/roles/node/defaults/main.yml` の `volta_global_tools`
+  - `ansible/roles/node/defaults/main.yml` の `node_global_tools`
+- **mise のランタイムを追加したい**
+  - `ansible/group_vars/all.yml` の `mise_runtime_versions`
 - **curl で入れるツールを追加したい**
   - `ansible/roles/curl_tools/tasks/main.yml`
 - **stow でリンクするパッケージを増やしたい**
