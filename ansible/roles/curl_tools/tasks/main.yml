@@ -7,8 +7,9 @@
   failed_when: false
 
 - name: Install Claude CLI
-  ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | sh
+  ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | bash
   args:
+    executable: /bin/bash
     creates: "{{ ansible_env.HOME }}/.claude/local/bin/claude"
   when: claude_check.rc != 0
 
