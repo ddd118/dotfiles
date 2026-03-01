@@ -29,6 +29,9 @@ stow -d stow -t ~ dotfiles claude codex config cursor firefox gemini githooks lo
 ```bash
 # bootstrap（Ansible 未インストールなら自動インストール）
 # ※ setup.sh の自動導入は apt-get が使える Debian/Ubuntu 系のみ対応
+# ※ WSL で systemd が無効な場合、setup.sh は /etc/wsl.conf に
+#    [boot] systemd=true を設定して一度終了します。
+#    その後 Windows 側で `wsl --shutdown` してから再実行してください。
 ./setup.sh
 
 # Dev Container / Codespaces 用（install.sh は setup.sh に委譲）
