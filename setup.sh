@@ -19,17 +19,28 @@ has_cmd() { command -v "$1" >/dev/null 2>&1; }
 is_root() { [[ "${EUID:-$(id -u)}" -eq 0 ]]; }
 
 is_wsl() {
-  [[ -n "${WSL_DISTRO_NAME:-}" ]] && return 0
+  uname -a 2>/dev/null | grep -qi microsoft && return 0
   [[ -r /proc/version ]] && grep -qi microsoft /proc/version
 }
 
 is_container() {
   [[ -f /.dockerenv || -f /run/.containerenv ]] && return 0
-  [[ -n "${REMOTE_CONTAINERS:-}" || -n "${DEVCONTAINER:-}" || -n "${CODESPACES:-}" ]]
+  [[ -r /proc/1/cgroup ]] && grep -Eq '/(docker|containerd|kubepods|podman|lxc)/' /proc/1/cgroup
 }
 
 is_systemd_pid1() {
-  [[ -r /proc/1/comm ]] && [[ "$(tr -d '\n' </proc/1/comm)" == "systemd" ]]
+  [[ "$(ps -p 1 -o comm= 2>/dev/null | tr -d '[:space:]')" == "systemd" ]]
+}
+
+wsl_conf_has_systemd_true() {
+  [[ -r /etc/wsl.conf ]] || return 1
+  grep -Eiq '^[[:space:]]*systemd[[:space:]]*=[[:space:]]*true([[:space:]]*([#;].*)?)?$' /etc/wsl.conf
+}
+
+is_systemd_operational() {
+  is_systemd_pid1 || return 1
+  has_cmd systemctl || return 1
+  systemctl --no-pager --plain list-units >/dev/null 2>&1
 }
 
 run_as_root() {
@@ -52,11 +63,19 @@ ensure_wsl_systemd_enabled() {
     return 0
   fi
 
-  if is_systemd_pid1; then
+  if is_systemd_operational; then
     return 0
   fi
 
   local wsl_conf="/etc/wsl.conf"
+
+  if wsl_conf_has_systemd_true; then
+    cat <<'MSG' >&2
+[INFO] /etc/wsl.conf には systemd=true が設定済みですが、現セッションには未反映です。
+[INFO] Windows 側で `wsl --shutdown` を実行してから WSL を再起動し、`./setup.sh` を再実行してください。
+MSG
+    return 1
+  fi
 
   echo "[INFO] WSL で systemd が無効です。/etc/wsl.conf に systemd=true を設定します..." >&2
 
