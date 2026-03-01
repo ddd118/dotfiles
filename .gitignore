@@ -9,3 +9,6 @@ result-*
 *.patch
 *.diff
 *.zip
+
+# Ignore node modules
+node_modules
