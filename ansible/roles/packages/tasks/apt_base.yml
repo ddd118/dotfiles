@@ -15,7 +15,9 @@
             apt_wsl_without_systemd_exclude_packages
             if (
               (is_wsl | default(false) | bool) and
-              ((ansible_service_mgr | default('')) != 'systemd')
+              (
+                (lookup('file', '/proc/1/comm', errors='ignore') | default('', true) | trim) != 'systemd'
+              )
             ) else []
           )
       }}
