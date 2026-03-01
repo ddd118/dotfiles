@@ -1,10 +1,10 @@
 ---
 - name: Deploy stow packages
   ansible.builtin.command:
-    cmd: stow -d {{ settings_repo }}/stow -t {{ ansible_env.HOME }} {{ stow_packages | join(' ') }}
+    cmd: stow --no-folding -d {{ settings_repo }}/stow -t {{ ansible_env.HOME }} {{ stow_packages | join(' ') }}
   register: stow_result
   changed_when: stow_result.stderr is search('LINK:')
-  failed_when: stow_result.rc != 0 and 'existing target' not in stow_result.stderr
+  failed_when: stow_result.rc != 0
 
 - name: Ensure .ssh/conf.local exists
   ansible.builtin.file:

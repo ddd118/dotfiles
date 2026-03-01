@@ -61,20 +61,18 @@
   roles:
     - role: packages
       tags: [packages]
+    - role: stow
+      tags: [stow]
     - role: fonts
       tags: [fonts]
       when: install_fonts | bool
-    - role: shell
-      tags: [shell]
-    - role: curl_tools
-      tags: [curl_tools]
-    - role: stow
-      tags: [stow]
     - role: mise
       tags: [mise]
       when: install_mise | bool
-    - role: node
-      tags: [node]
+    - role: curl_tools
+      tags: [curl_tools]
+    - role: shell
+      tags: [shell]
     - role: textlint
       tags: [textlint]
     - role: yazi
@@ -82,9 +80,6 @@
     - role: docker
       tags: [docker]
       when: install_docker | bool
-    - role: dotnet
-      tags: [dotnet]
-      when: install_dotnet | bool
     - role: gui_apps
       tags: [gui_apps]
       when: install_gui_apps | bool

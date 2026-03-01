@@ -28,7 +28,6 @@ is_container: >-
 allow_root: false
 
 install_docker: "{{ not is_container }}"
-install_dotnet: "{{ not is_container }}"
 install_gui_apps: "{{ (not is_wsl) and (not is_container) }}"
 install_fonts: "{{ (not is_wsl) and (not is_container) }}"
 install_mise: true
@@ -41,18 +40,37 @@ set_zsh_default: false
 # - 個人用途のサービスが含まれることが多いため、環境に合わせて OFF にできます。
 enable_wsl_user_services: true
 
-# ==================================================
-# バージョン設定
-# ==================================================
-dotnet_sdk_version: "8.0"
-
-# Node.js / npm / pnpm は Volta ロールで管理し、mise では管理しない。
+# ランタイム/CLI は mise で一元管理する。
 mise_runtime_versions:
   - name: python
     version: "latest"
   - name: go
     version: "latest"
   - name: ruby
+    version: "latest"
+  - name: node
+    version: "latest"
+  - name: npm
+    version: "latest"
+  - name: pnpm
+    version: "latest"
+  - name: uv
+    version: "latest"
+  - name: claude
+    version: "latest"
+  - name: codex
+    version: "latest"
+  - name: devcontainer-cli
+    version: "latest"
+  - name: gemini
+    version: "latest"
+  - name: "npm:@vscode/vsce"
+    version: "latest"
+  - name: dotnet
+    version: "latest"
+  - name: rust
+    version: "latest"
+  - name: yazi
     version: "latest"
 
 # ==================================================
