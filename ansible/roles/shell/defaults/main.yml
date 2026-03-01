@@ -1,4 +1,6 @@
 zsh_custom: "{{ ansible_env.HOME }}/.oh-my-zsh/custom"
+shell_mise_env:
+  PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.HOME }}/.local/share/mise/shims:{{ ansible_env.PATH }}"
 
 zsh_plugins:
   - name: zsh-autosuggestions
@@ -7,3 +9,5 @@ zsh_plugins:
     repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
   - name: zsh-bat
     repo: https://github.com/fdellwing/zsh-bat.git
+  - name: zsh-claudecode-completion
+    repo: https://github.com/wbingli/zsh-claudecode-completion.git
