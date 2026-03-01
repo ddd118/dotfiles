@@ -48,3 +48,8 @@ apt_ubuntu_only_packages:
 # (例: openssh-server は service 起動が絡んで失敗要因になりやすい)
 apt_container_exclude_packages:
   - openssh-server
+
+# WSL で systemd が有効でない場合に除外するパッケージ。
+# - openssh-server は postinst で systemctl 実行が走り失敗しやすい。
+apt_wsl_without_systemd_exclude_packages:
+  - openssh-server
