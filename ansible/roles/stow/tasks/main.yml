@@ -8,6 +8,12 @@
 
 - name: Ensure .ssh/conf.local exists
   ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.ssh"
+    state: directory
+    mode: "0700"
+
+- name: Ensure .ssh/conf.local exists
+  ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/.ssh/conf.local"
     state: touch
     mode: "0600"
