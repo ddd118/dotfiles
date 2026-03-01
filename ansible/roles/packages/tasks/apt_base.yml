@@ -13,12 +13,7 @@
         | difference(apt_container_exclude_packages if (is_container | default(false) | bool) else [])
         | difference(
             apt_wsl_without_systemd_exclude_packages
-            if (
-              (is_wsl | default(false) | bool) and
-              (
-                (lookup('file', '/proc/1/comm', errors='ignore') | default('', true) | trim) != 'systemd'
-              )
-            ) else []
+            if (is_wsl | default(false) | bool) else []
           )
       }}
     state: present

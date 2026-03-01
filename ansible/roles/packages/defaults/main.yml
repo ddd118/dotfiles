@@ -49,7 +49,8 @@ apt_ubuntu_only_packages:
 apt_container_exclude_packages:
   - openssh-server
 
-# WSL で systemd が有効でない場合に除外するパッケージ。
-# - openssh-server は postinst で systemctl 実行が走り失敗しやすい。
+# WSL では除外するパッケージ。
+# - systemd 有効時でも openssh-server の postinst が失敗する事例があるため、
+#   WSL では既定で除外する（必要なら変数上書きで個別に有効化）。
 apt_wsl_without_systemd_exclude_packages:
   - openssh-server
