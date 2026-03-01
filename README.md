@@ -55,13 +55,13 @@ ansible-playbook ansible/site.yml -e "install_docker=false"
 - [x] apt 追加パッケージ（autossh, jq, ripgrep, shellcheck, shfmt 等）
 - [x] locale 設定（ja_JP.UTF-8 を生成 / デフォルト LANG を設定）
 - [x] Ubuntu のみ: language-pack-ja をインストール
-- [x] curl インストール（claude CLI, uv, vim-plug）
+- [x] curl でのツール導入（vim-plug）
 
 ### shell（シェル設定）
 
 - [x] oh-my-zsh + powerlevel10k + プラグイン
 - [x] zsh をデフォルトシェルに変更
-- [ ] pnpm 補完ファイル作成
+- [x] pnpm 補完ファイル作成
 - [x] git-gtr 補完ファイル
 
 ### stow（シンボリックリンク管理）
@@ -70,16 +70,10 @@ ansible-playbook ansible/site.yml -e "install_docker=false"
 - [x] .claude, .codex, .config 等のシンボリックリンク作成
 - [x] .ssh/conf.local の空ファイル生成
 
-### node（Node.js ツール）
-
-- [x] volta + node + pnpm
-- [x] グローバルツール（@devcontainers/cli, @google/gemini-cli, @openai/codex, @vscode/vsce）
-
 ### mise（言語ランタイム）
 
 - [x] mise 本体の導入
-- [x] グローバルランタイム（python, go, ruby）
-- [x] Node.js / npm / pnpm は Volta 側で管理（mise 対象外）
+- [x] グローバルランタイム（python, go, ruby, node, npm, pnpm, uv, claude, codex, devcontainer-cli, gemini, npm:@vscode/vsce, dotnet, rust, yazi）
 - [x] 個人用セットアップ前提で `latest` を利用（再現性は各プロジェクトの Dockerfile / lockfile 側で担保）
 
 ### fonts（フォント）
@@ -93,7 +87,7 @@ ansible-playbook ansible/site.yml -e "install_docker=false"
 
 ### yazi
 
-- [x] clone & cargo build
+- [x] mise で yazi を導入
 - [x] プラグイン・テーマ導入（full-border, catppuccin-macchiato, catppuccin-latte）
 
 ### その他
@@ -123,8 +117,6 @@ docker run --rm -it \
     - `apt_base_packages` / `apt_additional_packages`
     - Ubuntu のみ: `apt_ubuntu_only_packages`
     - コンテナでは除外: `apt_container_exclude_packages`
-- **Node のグローバルツールを追加したい**
-  - `ansible/roles/node/defaults/main.yml` の `node_global_tools`
 - **mise のランタイムを追加したい**
   - `ansible/group_vars/all.yml` の `mise_runtime_versions`
 - **curl で入れるツールを追加したい**

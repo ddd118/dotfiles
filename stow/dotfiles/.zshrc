@@ -62,16 +62,9 @@ WORDCHARS=${WORDCHARS//[|:]/}
 # PATH 追加（重複しても typeset -U path で整理される）
 path=("$HOME/.local/bin" "$HOME/bin" $path)
 
-# Volta（使ってるなら PATH を通すだけでOK）
-if [[ -d "$HOME/.volta/bin" ]]; then
-  export VOLTA_HOME="${VOLTA_HOME:-$HOME/.volta}"
-  path=("$VOLTA_HOME/bin" $path)
-fi
-
-# pnpm（installer 方式のとき用。Volta/Node経由だけなら不要なことも多い）
-export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
-if [[ -d "$PNPM_HOME" ]]; then
-  path=("$PNPM_HOME" $path)
+# mise（ランタイム/CLI 管理）
+if [[ -d "$HOME/.local/share/mise/shims" ]]; then
+  path=("$HOME/.local/share/mise/shims" $path)
 fi
 
 # 独自補完を置くディレクトリ（compinit より前が安全）
@@ -117,10 +110,9 @@ ENABLE_CORRECTION="true"
 zstyle ':omz:update' mode auto
 zstyle ':omz:update' frequency 7
 
-# 外部コマンドがある時だけ（fzf/zoxide/volta は“バイナリ必須”）
+# 外部コマンドがある時だけ（fzf/zoxide は“バイナリ必須”）
 (( $+commands[fzf] ))    && plugins+=(fzf)
 (( $+commands[zoxide] )) && plugins+=(zoxide)
-(( $+commands[volta] ))  && plugins+=(volta)
 
 # ユーザープラグイン（clone済みのときだけ）
 if [[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-autosuggestions" ]]; then
