@@ -1,9 +1,18 @@
 ---
+- name: Check if npm is available
+  ansible.builtin.command: bash -lc "command -v npm"
+  register: npm_check
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.HOME }}/.local/share/mise/shims:{{ ansible_env.PATH }}"
+
 - name: Ensure textlint-hub directory
   ansible.builtin.file:
     path: "{{ textlint_dir }}"
     state: directory
     mode: "0755"
+  when: npm_check.rc == 0
 
 - name: Check if textlint-hub package.json exists
   ansible.builtin.stat:
@@ -15,9 +24,9 @@
     cmd: npm init -y
     chdir: "{{ textlint_dir }}"
   environment:
-    VOLTA_HOME: "{{ ansible_env.HOME }}/.volta"
-    PATH: "{{ ansible_env.HOME }}/.volta/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.HOME }}/.local/share/mise/shims:{{ ansible_env.PATH }}"
   when:
+    - npm_check.rc == 0
     - not ansible_check_mode
     - not textlint_pkg.stat.exists
 
@@ -26,8 +35,16 @@
     cmd: "npm install {{ textlint_packages | join(' ') }}"
     chdir: "{{ textlint_dir }}"
   environment:
-    VOLTA_HOME: "{{ ansible_env.HOME }}/.volta"
-    PATH: "{{ ansible_env.HOME }}/.volta/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.HOME }}/.local/share/mise/shims:{{ ansible_env.PATH }}"
   register: textlint_install
   changed_when: "'added' in textlint_install.stdout"
-  when: not ansible_check_mode
+  when:
+    - npm_check.rc == 0
+    - not ansible_check_mode
+
+- name: Explain why textlint setup is skipped
+  ansible.builtin.debug:
+    msg: |
+      npm が見つからないため textlint セットアップをスキップします。
+      mise の runtime 設定に node/npm を含めてください。
+  when: npm_check.rc != 0

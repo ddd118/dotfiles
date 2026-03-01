@@ -4,11 +4,35 @@ mise_data_dir: "{{ ansible_env.HOME }}/.local/share/mise"
 mise_env:
   PATH: "{{ ansible_env.HOME }}/.local/bin:{{ mise_data_dir }}/shims:{{ ansible_env.PATH }}"
 
-# Node/npm/pnpm は Volta ロールで管理するため、ここには含めない。
+# ランタイム/CLI は mise で一元管理する。
 mise_runtime_versions:
   - name: python
     version: "latest"
   - name: go
     version: "latest"
   - name: ruby
+    version: "latest"
+  - name: node
+    version: "latest"
+  - name: npm
+    version: "latest"
+  - name: pnpm
+    version: "latest"
+  - name: uv
+    version: "latest"
+  - name: claude
+    version: "latest"
+  - name: codex
+    version: "latest"
+  - name: devcontainer-cli
+    version: "latest"
+  - name: gemini
+    version: "latest"
+  - name: "npm:@vscode/vsce"
+    version: "latest"
+  - name: dotnet
+    version: "latest"
+  - name: rust
+    version: "latest"
+  - name: yazi
     version: "latest"
