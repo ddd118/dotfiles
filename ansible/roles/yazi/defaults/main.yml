@@ -3,3 +3,7 @@ yazi_env:
 
 yazi_plugins:
   - "yazi-rs/plugins:full-border"
+
+yazi_flavors:
+  - "yazi-rs/flavors:catppuccin-macchiato"
+  - "yazi-rs/flavors:catppuccin-latte"
