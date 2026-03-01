@@ -73,7 +73,7 @@ ansible-playbook ansible/site.yml -e "install_docker=false"
 ### mise（言語ランタイム）
 
 - [x] mise 本体の導入
-- [x] グローバルランタイム（python, go, ruby, node, npm, pnpm, uv, claude, codex, devcontainer-cli, gemini, npm:@vscode/vsce, dotnet, rust, yazi）
+- [x] グローバルランタイム（python, go, ruby, node, pnpm, uv, claude, codex, devcontainer-cli, gemini, npm:@vscode/vsce, dotnet, rust, yazi）
 - [x] 個人用セットアップ前提で `latest` を利用（再現性は各プロジェクトの Dockerfile / lockfile 側で担保）
 
 ### fonts（フォント）

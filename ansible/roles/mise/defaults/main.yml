@@ -14,8 +14,6 @@ mise_runtime_versions:
     version: "latest"
   - name: node
     version: "latest"
-  - name: npm
-    version: "latest"
   - name: pnpm
     version: "latest"
   - name: uv

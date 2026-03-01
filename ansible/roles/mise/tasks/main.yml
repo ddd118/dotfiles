@@ -24,45 +24,33 @@
           | first
         ) | default('latest')
       }}
-    mise_npm_version: >-
-      {{
-        (
-          mise_runtime_versions
-          | selectattr('name', 'equalto', 'npm')
-          | map(attribute='version')
-          | list
-          | first
-        ) | default('latest')
-      }}
 
-- name: Install node/npm first for npm-backed tools
+- name: Install node first for npm-backed tools
   ansible.builtin.command: "{{ mise_bin }} install {{ item }}"
   environment: "{{ mise_env }}"
   loop:
     - "node@{{ mise_node_version }}"
-    - "npm@{{ mise_npm_version }}"
   changed_when: false
   when: (not ansible_check_mode) or mise_stat.stat.exists
 
-- name: Set global node/npm first for npm-backed tools
+- name: Set global node first for npm-backed tools
   ansible.builtin.command: "{{ mise_bin }} use -g {{ item }}"
   environment: "{{ mise_env }}"
   loop:
     - "node@{{ mise_node_version }}"
-    - "npm@{{ mise_npm_version }}"
   changed_when: false
   when: (not ansible_check_mode) or mise_stat.stat.exists
 
 - name: Install configured runtimes with mise
   ansible.builtin.command: "{{ mise_bin }} install {{ item.name }}@{{ item.version }}"
   environment: "{{ mise_env }}"
-  loop: "{{ mise_runtime_versions }}"
+  loop: "{{ mise_runtime_versions | rejectattr('name', 'equalto', 'node') | list }}"
   changed_when: false
   when: (not ansible_check_mode) or mise_stat.stat.exists
 
 - name: Set global runtime versions with mise
   ansible.builtin.command: "{{ mise_bin }} use -g {{ item.name }}@{{ item.version }}"
   environment: "{{ mise_env }}"
-  loop: "{{ mise_runtime_versions }}"
+  loop: "{{ mise_runtime_versions | rejectattr('name', 'equalto', 'node') | list }}"
   changed_when: false
   when: (not ansible_check_mode) or mise_stat.stat.exists
