@@ -36,6 +36,9 @@ apt_additional_packages:
   # Rust 製ツールをソースからビルドする際に必要 (例: yazi)
   - build-essential
   - pkg-config
+  # mise 経由で Ruby をソースビルドする際に必要
+  - libffi-dev
+  - libyaml-dev
   - zip
   - stow
 

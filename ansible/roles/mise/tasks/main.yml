@@ -12,6 +12,12 @@
     - not ansible_check_mode
     - not mise_stat.stat.exists
 
+- name: Prefer precompiled Ruby binaries on mise
+  ansible.builtin.command: "{{ mise_bin }} settings ruby.compile=false"
+  environment: "{{ mise_env }}"
+  changed_when: false
+  when: (not ansible_check_mode) or mise_stat.stat.exists
+
 - name: Resolve node/npm versions for npm-backed tool installs
   ansible.builtin.set_fact:
     mise_node_version: >-
