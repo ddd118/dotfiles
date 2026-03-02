@@ -4,8 +4,6 @@ set -euo pipefail
 # post-rewrite は、コミットを書き換えるコマンド (git commit --amend、git rebase) によって呼び出される
 # これを利用して、リベース後に一度だけアーカイブをエクスポートするようにする
 
-repo_root="$(git rev-parse --show-toplevel)"
-
 # stdin には <old> <new> が含まれていので捨てる
 cat >/dev/null || true
 
