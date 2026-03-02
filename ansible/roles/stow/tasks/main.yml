@@ -3,7 +3,7 @@
   ansible.builtin.command:
     cmd: stow --no-folding -d {{ settings_repo }}/stow -t {{ ansible_env.HOME }} {{ stow_packages | join(' ') }}
   register: stow_result
-  changed_when: stow_result.stderr is search('LINK:')
+  changed_when: (stow_result.stdout is search('LINK:')) or (stow_result.stderr is search('LINK:'))
   failed_when: stow_result.rc != 0
 
 - name: Ensure .ssh/conf.local exists

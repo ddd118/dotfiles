@@ -5,27 +5,7 @@
   gather_facts: true
 
   pre_tasks:
-    - name: Detect WSL environment
-      ansible.builtin.set_fact:
-        is_wsl: >-
-          {{
-            ansible_env.WSL_DISTRO_NAME is defined or
-            (lookup('file', '/proc/version', errors='ignore') | default('', true) is regex('(?i)microsoft'))
-          }}
-      tags: [always]
-
-    - name: Detect container environment
-      ansible.builtin.set_fact:
-        is_container: >-
-          {{
-            (lookup('file', '/.dockerenv', errors='ignore') | default('', true) | length > 0) or
-            (lookup('file', '/run/.containerenv', errors='ignore') | default('', true) | length > 0) or
-            (ansible_virtualization_type | default('')) in ['docker', 'containerd', 'podman', 'lxc', 'systemd-nspawn'] or
-            ansible_env.REMOTE_CONTAINERS is defined or
-            ansible_env.DEVCONTAINER is defined or
-            ansible_env.CODESPACES is defined
-          }}
-      tags: [always]
+    # is_wsl / is_container は group_vars/all.yml 側で自動判定する
 
     - name: Verify supported OS family
       ansible.builtin.assert:
