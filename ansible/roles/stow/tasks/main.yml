@@ -1,9 +1,61 @@
 ---
+- name: Detect conflicting targets for stow (dry-run)
+  ansible.builtin.command:
+    # "既存の dotfiles をリポジトリの内容で上書きする" 方針のため、
+    # dry-run で衝突対象（existing target）を列挙してから削除 → restow を行う。
+    cmd: >-
+      stow --no-folding --restow -n -v
+      -d {{ settings_repo }}/stow
+      -t {{ ansible_env.HOME }}
+      {{ stow_packages | join(' ') }}
+  register: stow_dry_run
+  changed_when: false
+  failed_when: false
+
+- name: Extract conflicting target paths
+  ansible.builtin.set_fact:
+    # stow のエラーメッセージ例:
+    #   stow: ERROR: existing target is neither a link nor a directory: .zshrc
+    #   stow: ERROR: existing target is not owned by stow: .config/...
+    # 末尾のパスだけを抜き出す。
+    stow_conflict_paths: >-
+      {{
+        (
+          (stow_dry_run.stdout | default(''))
+          + '\n'
+          + (stow_dry_run.stderr | default(''))
+        )
+        | regex_findall('existing target[^\\n]*?:\\s*([^\\n]+)')
+        | map('trim')
+        | unique
+        | list
+      }}
+  changed_when: false
+
+- name: Remove conflicting targets (force overwrite)
+  # バックアップ保持は行わず、衝突している対象は削除してリンクで置き換える。
+  # 個人用リポジトリとして「常にリポジトリ側が正」を優先する。
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/{{ item }}"
+    state: absent
+  loop: "{{ stow_conflict_paths }}"
+  when: stow_conflict_paths | length > 0
+
 - name: Deploy stow packages
   ansible.builtin.command:
-    cmd: stow --no-folding -d {{ settings_repo }}/stow -t {{ ansible_env.HOME }} {{ stow_packages | join(' ') }}
+    cmd: >-
+      stow --no-folding --restow -v
+      -d {{ settings_repo }}/stow
+      -t {{ ansible_env.HOME }}
+      {{ stow_packages | join(' ') }}
   register: stow_result
-  changed_when: (stow_result.stdout is search('LINK:')) or (stow_result.stderr is search('LINK:'))
+  changed_when: >-
+    (stow_result.stdout is search('LINK:'))
+    or (stow_result.stderr is search('LINK:'))
+    or (stow_result.stdout is search('UNLINK:'))
+    or (stow_result.stderr is search('UNLINK:'))
+    or (stow_result.stdout is search('MKDIR:'))
+    or (stow_result.stderr is search('MKDIR:'))
   failed_when: stow_result.rc != 0
 
 - name: Ensure .ssh/conf.local exists
