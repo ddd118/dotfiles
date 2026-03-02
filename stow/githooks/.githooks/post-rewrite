@@ -9,4 +9,4 @@ repo_root="$(git rev-parse --show-toplevel)"
 # stdin には <old> <new> が含まれていので捨てる
 cat >/dev/null || true
 
-[[ -f "$repo_root/export-archive.githook.local.sh" ]] && "$repo_root/export-archive.githook.local.sh"
+[[ -f "${HOME}/.local/bin/export-archive" ]] && "${HOME}/.local/bin/export-archive"

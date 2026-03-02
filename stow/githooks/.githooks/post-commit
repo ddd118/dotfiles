@@ -14,9 +14,3 @@ fi
 
 [[ -f "${HOME}/.local/bin/export-archive" ]] && "${HOME}/.local/bin/export-archive"
 
-pwd
-
-mkdir -p .claude/skills && cp -rf .skills/* .claude/skills 
-mkdir -p .codex/skills && cp -rf .skills/* .codex/skills 
-mkdir -p .gemini/skills && cp -rf .skills/* .gemini/skills 
-mkdir -p .cursor/skills && cp -rf .skills/* .cursor/skills 
