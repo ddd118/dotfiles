@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git commit:*), Bash(git diff:*), Bash(git rev-parse:*), Bash(git log:*)
+allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git push --force-with-lease:*), Bash(git commit:*), Bash(git diff:*), Bash(git rev-parse:*), Bash(git log:*)
 description: Commit, push, and open a PR
 ---
 
@@ -25,7 +25,6 @@ description: Commit, push, and open a PR
 --max-lines=N : 1 コミット最大変更行数の目安（既定: 500）
 --type=<t> : 全コミットの type を固定（feat|fix|refactor|chore|docs|perf|test|ci）
 --scope=<s> : 全コミットの scope を固定（例: ui、api、orders 等）
---auto-rebase : push 拒否（非 fast-forward）時、pull --rebase --autostash を**1 回だけ**自動実行
 
 # 手順
 
@@ -66,8 +65,8 @@ description: Commit, push, and open a PR
    - 追跡ブランチが無い → `git push -u origin BRANCH`
    - 既に追跡あり → `git push`
    - push 拒否（非 fast-forward）の場合：
-     - `--auto-rebase` 指定があれば `git pull --rebase --autostash` 実行後に再 `git push`
-     - 指定が無ければ提案のみ（自動実行しない）
+     - `git push --force-with-lease --force-if-includes` で再試行（確認不要）
+   - push 出力に MR/PR 作成用 URL が含まれる場合は、そのリンクをユーザーに表示する
 
 # エラー時の調査・出力
 
@@ -75,9 +74,8 @@ description: Commit, push, and open a PR
 - ログ抜粋：エラー出力の末尾 ~50 行
 - 原因候補 Top3（例）：
   - pre-commit hook 失敗 / LFS 必須ファイル (>100MB) / 改行コード or フォーマッタ差異
-  - 競合（rebase 必要）/ 権限不足 / 上流に force-push があり履歴差分が大きい
+  - 権限不足 / 上流の保護ブランチ設定
 - 最短対処案（1 つだけ提示。自動操作はここでは行わない）：
-  - 例）`git pull --rebase --autostash` の実行、もしくは `--no-verify` の一時使用（推奨度低）
   - 例）LFS 対応が必要な場合は `git lfs track` と再コミットを提案
 
 # 追加ノート
