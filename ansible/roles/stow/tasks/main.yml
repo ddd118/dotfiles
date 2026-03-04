@@ -1,45 +1,105 @@
 ---
-- name: Detect conflicting targets for stow (dry-run)
-  ansible.builtin.command:
-    # "既存の dotfiles をリポジトリの内容で上書きする" 方針のため、
-    # dry-run で衝突対象（existing target）を列挙してから削除 → restow を行う。
-    cmd: >-
-      stow --no-folding --restow -n -v
-      -d {{ settings_repo }}/stow
-      -t {{ ansible_env.HOME }}
-      {{ stow_packages | join(' ') }}
-  register: stow_dry_run
+- name: Find managed file entries in stow packages
+  ansible.builtin.find:
+    paths: "{{ settings_repo }}/stow/{{ item }}"
+    recurse: true
+    hidden: true
+    file_type: file
+  loop: "{{ stow_packages }}"
+  register: stow_managed_files
   changed_when: false
-  failed_when: false
 
-- name: Extract conflicting target paths
+- name: Find managed symlink entries in stow packages
+  ansible.builtin.find:
+    paths: "{{ settings_repo }}/stow/{{ item }}"
+    recurse: true
+    hidden: true
+    file_type: link
+  loop: "{{ stow_packages }}"
+  register: stow_managed_links
+  changed_when: false
+
+- name: Build managed target entries
+  # stow パッケージ内の実体パスから、HOME 側の相対ターゲットを構築する。
   ansible.builtin.set_fact:
-    # stow のエラーメッセージ例:
-    #   stow: ERROR: existing target is neither a link nor a directory: .zshrc
-    #   stow: ERROR: existing target is not owned by stow: .config/...
-    # 末尾のパスだけを抜き出す。
-    stow_conflict_paths: >-
-      {{
-        (
-          (stow_dry_run.stdout | default(''))
-          + '\n'
-          + (stow_dry_run.stderr | default(''))
-        )
-        | regex_findall('existing target[^\\n]*?:\\s*([^\\n]+)')
-        | map('trim')
-        | unique
-        | list
-      }}
+    stow_managed_targets: >-
+      {%- set targets = [] -%}
+      {%- for result in (stow_managed_files.results + stow_managed_links.results) -%}
+        {%- for entry in (result.files | default([])) -%}
+          {%- set rel_path = entry.path | regex_replace('^' ~ (settings_repo ~ '/stow/' ~ result.item ~ '/'), '') -%}
+          {%- set _ = targets.append({'target_rel_path': rel_path, 'source_path': entry.path}) -%}
+        {%- endfor -%}
+      {%- endfor -%}
+      {{ targets }}
   changed_when: false
 
-- name: Remove conflicting targets (force overwrite)
-  # バックアップ保持は行わず、衝突している対象は削除してリンクで置き換える。
-  # 個人用リポジトリとして「常にリポジトリ側が正」を優先する。
+- name: Stat managed target paths in HOME
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/{{ item.target_rel_path }}"
+    follow: false
+  loop: "{{ stow_managed_targets }}"
+  register: stow_target_stats
+  changed_when: false
+
+- name: Classify removable targets (files and mismatched symlinks)
+  ansible.builtin.set_fact:
+    stow_removable_targets: >-
+      {%- set removable = [] -%}
+      {%- for result in stow_target_stats.results -%}
+        {%- set is_file = result.stat.isreg | default(false) -%}
+        {%- set is_link = result.stat.islnk | default(false) -%}
+        {%- if is_file -%}
+          {%- set _ = removable.append(result.item.target_rel_path) -%}
+        {%- elif is_link and ((result.stat.lnk_source | default('')) != result.item.source_path) -%}
+          {%- set _ = removable.append(result.item.target_rel_path) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ removable | unique | list }}
+  changed_when: false
+
+- name: Classify blocking targets (non file/symlink types)
+  ansible.builtin.set_fact:
+    stow_blocking_targets: >-
+      {%- set blocking = [] -%}
+      {%- for result in stow_target_stats.results -%}
+        {%- set is_file = result.stat.isreg | default(false) -%}
+        {%- set is_link = result.stat.islnk | default(false) -%}
+        {%- if (result.stat.exists | default(false)) and (not is_file) and (not is_link) -%}
+          {%- set detected_type = 'other' -%}
+          {%- if result.stat.isdir | default(false) -%}
+            {%- set detected_type = 'directory' -%}
+          {%- elif result.stat.ischr | default(false) -%}
+            {%- set detected_type = 'char_device' -%}
+          {%- elif result.stat.isblk | default(false) -%}
+            {%- set detected_type = 'block_device' -%}
+          {%- elif result.stat.issock | default(false) -%}
+            {%- set detected_type = 'socket' -%}
+          {%- elif result.stat.isfifo | default(false) -%}
+            {%- set detected_type = 'fifo' -%}
+          {%- endif -%}
+          {%- set _ = blocking.append({'path': result.item.target_rel_path, 'type': detected_type}) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ blocking }}
+  changed_when: false
+
+- name: Fail on blocking targets
+  ansible.builtin.fail:
+    msg: |-
+      stow 管理対象で型不一致の既存パスが見つかりました。安全のため処理を停止します。
+      既存パス（path: type）:
+      {% for item in stow_blocking_targets %}
+      - {{ item.path }}: {{ item.type }}
+      {% endfor %}
+  when: stow_blocking_targets | length > 0
+
+- name: Remove managed file/link targets (force overwrite)
+  # 既存ディレクトリは削除せず、管理対象ファイル/不一致シンボリックリンクのみ置き換える。
   ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/{{ item }}"
     state: absent
-  loop: "{{ stow_conflict_paths }}"
-  when: stow_conflict_paths | length > 0
+  loop: "{{ stow_removable_targets }}"
+  when: stow_removable_targets | length > 0
 
 - name: Deploy stow packages
   ansible.builtin.command:
