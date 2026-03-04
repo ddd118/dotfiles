@@ -4,7 +4,7 @@
 is_wsl: >-
   {{
     ansible_env.WSL_DISTRO_NAME is defined or
-    (lookup('file', '/proc/version', errors='ignore') | default('') is regex('(?i)microsoft'))
+    (lookup('file', '/proc/version', errors='ignore') | default('', true) is regex('(?i)microsoft'))
   }}
 
 # Docker / Dev Container など "コンテナ内" 判定
@@ -13,8 +13,8 @@ is_wsl: >-
 #   後続の optional フラグのデフォルト値を切り替えるために使う。
 is_container: >-
   {{
-    (lookup('file', '/.dockerenv', errors='ignore') | default('') | length > 0) or
-    (lookup('file', '/run/.containerenv', errors='ignore') | default('') | length > 0) or
+    (lookup('file', '/.dockerenv', errors='ignore') | default('', true) | length > 0) or
+    (lookup('file', '/run/.containerenv', errors='ignore') | default('', true) | length > 0) or
     (ansible_virtualization_type | default('')) in ['docker', 'containerd', 'podman', 'lxc', 'systemd-nspawn'] or
     ansible_env.REMOTE_CONTAINERS is defined or
     ansible_env.DEVCONTAINER is defined or
