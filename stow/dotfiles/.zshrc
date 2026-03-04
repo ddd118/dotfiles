@@ -99,8 +99,6 @@ fi
 # プラグイン：存在するものだけ有効化（起動時の警告出力を防ぐ）
 plugins=(
 	git
-  docker
-  npm
 )
 
 # スペルミス補正
@@ -111,6 +109,8 @@ zstyle ':omz:update' mode auto
 zstyle ':omz:update' frequency 7
 
 # 外部コマンドがある時だけ（fzf/zoxide は“バイナリ必須”）
+(( $+commands[docker] )) && plugins+=(docker)
+(( $+commands[npm] ))    && plugins+=(npm)
 (( $+commands[fzf] ))    && plugins+=(fzf)
 (( $+commands[zoxide] )) && plugins+=(zoxide)
 
