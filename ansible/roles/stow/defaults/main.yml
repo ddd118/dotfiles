@@ -1,6 +1,23 @@
 stow_packages:
   - dotfiles
   - claude
+  - claude-commands
+  - codex
+  - codex-prompts
+  - codex-rules
+  - config
+  - config-systemd-user
+  - cursor
+  - firefox
+  - gemini
+  - githooks
+  - local-bin
+  - ssh
+  - ssh-conf-d
+
+stow_file_packages:
+  - dotfiles
+  - claude
   - codex
   - config
   - cursor
@@ -9,3 +26,22 @@ stow_packages:
   - githooks
   - local-bin
   - ssh
+
+stow_dir_packages:
+  - claude-commands
+  - codex-prompts
+  - codex-rules
+  - config-systemd-user
+  - ssh-conf-d
+
+stow_dir_bind_targets:
+  - package: claude-commands
+    target_rel_path: .claude/commands
+  - package: codex-prompts
+    target_rel_path: .codex/prompts
+  - package: codex-rules
+    target_rel_path: .codex/rules
+  - package: config-systemd-user
+    target_rel_path: .config/systemd/user
+  - package: ssh-conf-d
+    target_rel_path: .ssh/conf.d
