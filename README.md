@@ -46,7 +46,10 @@ scripts/        ... 再利用性のあるユーティリティスクリプト
 - **curl で入れるツールを追加したい**
   - `ansible/roles/curl_tools/tasks/main.yml`
 - **stow でリンクするパッケージを増やしたい**
-  - `ansible/roles/stow/defaults/main.yml` の `stow_packages`
+  - `ansible/roles/stow/defaults/main.yml` で mode を選んで追加
+    - ファイル単位: `stow_file_packages`
+    - ディレクトリ単位: `stow_dir_packages`
+    - ディレクトリ単位の貼り先: `stow_dir_bind_targets`
 
 ## メモ書き
 
