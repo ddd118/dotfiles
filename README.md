@@ -42,7 +42,7 @@ scripts/        ... 再利用性のあるユーティリティスクリプト
     - Ubuntu のみ: `apt_ubuntu_only_packages`
     - コンテナでは除外: `apt_container_exclude_packages`
 - **mise のランタイムを追加したい**
-  - `ansible/group_vars/all.yml` の `mise_runtime_versions`
+  - `stow/config/.config/mise/config.toml` の `[tools]`
 - **curl で入れるツールを追加したい**
   - `ansible/roles/curl_tools/tasks/main.yml`
 - **stow でリンクするパッケージを増やしたい**
