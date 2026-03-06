@@ -12,51 +12,35 @@
     - not ansible_check_mode
     - not mise_stat.stat.exists
 
+- name: Check if mise global config exists
+  ansible.builtin.stat:
+    path: "{{ mise_global_config_path }}"
+  register: mise_global_config_stat
+
+- name: Ensure mise global config is managed by stow
+  ansible.builtin.assert:
+    that:
+      - mise_global_config_stat.stat.exists
+      - (mise_global_config_stat.stat.isreg | default(false)) or (mise_global_config_stat.stat.islnk | default(false))
+    fail_msg: |
+      {{ mise_global_config_path }} が見つかりません。
+      stow で .config/mise/config.toml を配置してから再実行してください。
+      例: ansible-playbook ansible/site.yml --tags stow,mise
+
 - name: Prefer precompiled Ruby binaries on mise
   ansible.builtin.command: "{{ mise_bin }} settings ruby.compile=false"
   environment: "{{ mise_env }}"
   changed_when: false
-  when: (not ansible_check_mode) or mise_stat.stat.exists
+  when:
+    - (not ansible_check_mode) or mise_stat.stat.exists
+    - mise_global_config_stat.stat.exists
 
-- name: Resolve node/npm versions for npm-backed tool installs
-  ansible.builtin.set_fact:
-    mise_node_version: >-
-      {{
-        (
-          mise_runtime_versions
-          | selectattr('name', 'equalto', 'node')
-          | map(attribute='version')
-          | list
-          | first
-        ) | default('latest')
-      }}
-
-- name: Install node first for npm-backed tools
-  ansible.builtin.command: "{{ mise_bin }} install {{ item }}"
+- name: Install configured tools with mise config
+  ansible.builtin.command: "{{ mise_bin }} install"
+  args:
+    chdir: "{{ ansible_env.HOME }}"
   environment: "{{ mise_env }}"
-  loop:
-    - "node@{{ mise_node_version }}"
   changed_when: false
-  when: (not ansible_check_mode) or mise_stat.stat.exists
-
-- name: Set global node first for npm-backed tools
-  ansible.builtin.command: "{{ mise_bin }} use -g {{ item }}"
-  environment: "{{ mise_env }}"
-  loop:
-    - "node@{{ mise_node_version }}"
-  changed_when: false
-  when: (not ansible_check_mode) or mise_stat.stat.exists
-
-- name: Install configured runtimes with mise
-  ansible.builtin.command: "{{ mise_bin }} install {{ item.name }}@{{ item.version }}"
-  environment: "{{ mise_env }}"
-  loop: "{{ mise_runtime_versions | rejectattr('name', 'equalto', 'node') | list }}"
-  changed_when: false
-  when: (not ansible_check_mode) or mise_stat.stat.exists
-
-- name: Set global runtime versions with mise
-  ansible.builtin.command: "{{ mise_bin }} use -g {{ item.name }}@{{ item.version }}"
-  environment: "{{ mise_env }}"
-  loop: "{{ mise_runtime_versions | rejectattr('name', 'equalto', 'node') | list }}"
-  changed_when: false
-  when: (not ansible_check_mode) or mise_stat.stat.exists
+  when:
+    - (not ansible_check_mode) or mise_stat.stat.exists
+    - mise_global_config_stat.stat.exists

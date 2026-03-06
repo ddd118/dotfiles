@@ -40,37 +40,6 @@ set_zsh_default: false
 # - 個人用途のサービスが含まれることが多いため、環境に合わせて OFF にできます。
 enable_wsl_user_services: true
 
-# ランタイム/CLI は mise で一元管理する。
-mise_runtime_versions:
-  - name: python
-    version: "latest"
-  - name: go
-    version: "latest"
-  - name: ruby
-    version: "latest"
-  - name: node
-    version: "latest"
-  - name: pnpm
-    version: "latest"
-  - name: uv
-    version: "latest"
-  - name: claude
-    version: "latest"
-  - name: codex
-    version: "latest"
-  - name: devcontainer-cli
-    version: "latest"
-  - name: gemini
-    version: "latest"
-  - name: "npm:@vscode/vsce"
-    version: "latest"
-  - name: dotnet
-    version: "latest"
-  - name: rust
-    version: "latest"
-  - name: yazi
-    version: "latest"
-
 # ==================================================
 # リポジトリパス
 # ==================================================
