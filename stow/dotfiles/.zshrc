@@ -130,6 +130,9 @@ if [[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-syntax-highlighting" ]]; then
 fi
 
 # compinit 前に必要な補完があればここに書く
+if command -v git-gtr >/dev/null 2>&1; then
+  eval "$(git gtr completion zsh)"
+fi
 
 # 読み込み（これが compinit も内部でやる）
 if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
