@@ -1,276 +1,94 @@
-# Codex 設定例（config.toml）
-#
-# このファイルには、Codex が config.toml から読み取るすべてのキー、既定値、
-# および簡潔な説明が記載されています。ここにある値は、CLI に組み込まれている
-# 実効既定値を反映しています。必要に応じて調整してください。
-#
-# 注意事項
-# - TOML では、ルートキーはテーブル定義より前に記述する必要があります。
-# - 既定で「未設定（unset）」となる任意キーは、コメントアウトして注記付きで示しています。
-# - MCP サーバー、プロファイル、モデルプロバイダーは例です。不要なら削除または編集してください。
-
-################################################################################
-# Core Model Selection
-################################################################################
-
-# Codex が使用する主モデル。既定: すべてのプラットフォームで "gpt-5.2-codex"。
+# * Core Model Selection
 model = "gpt-5.3-codex"
-
-# Optional model override for /review. Default: unset (uses current session model).
-# review_model = "gpt-5.2-codex"
-# ↑（設定行のみなので翻訳対象外）
-
-# [model_providers] から選択するプロバイダーID。既定: "openai"。
-# model_provider = "openai"
-
-# Default OSS provider for --oss sessions. When unset, Codex prompts. Default: unset.
-# oss_provider = "ollama"
-# ↑（設定行のみなので翻訳対象外）
-
-# 任意の手動モデルメタデータ。未設定の場合、Codex がモデルから自動判定します。
-# 値を強制するにはコメントアウトを外してください。
-# model_context_window = 128000       # tokens; default: auto for model
-# model_auto_compact_token_limit = 0  # tokens; unset uses model defaults
-# tool_output_token_limit = 10000     # tokens stored per tool output; default: 10000 for gpt-5.2-codex
-
+model_context_window = 1000000
+model_auto_compact_token_limit = 900000
 web_search = "live"
 
-################################################################################
-# Reasoning & Verbosity (Responses API capable models)
-################################################################################
-
+# * Reasoning & Verbosity (Responses API capable models)
 # 推論強度: minimal | low | medium | high | xhigh（既定: medium；gpt-5.2-codex と gpt-5.2 は xhigh）
 model_reasoning_effort = "medium"
-
-# 推論サマリー: auto | concise | detailed | none（既定: auto）
-# model_reasoning_summary = "auto"
-
 # GPT-5 系（Responses API）のテキスト冗長度: low | medium | high（既定: medium）
 model_verbosity = "medium"
 
-# 現在のモデルに対して推論サマリーを強制有効化（既定: false）
-# model_supports_reasoning_summaries = false
+# * Instruction Overrides
+# AGENTS.md の前に注入する追加のユーザー指示。既定: 未設定。
+developer_instructions = ""
 
-################################################################################
-# Instruction Overrides
-################################################################################
-
-# 追加のユーザー指示は AGENTS.md の前に注入されます。既定: 未設定。
-# developer_instructions = ""
-
-# （無視されます）任意のレガシーなベース指示の上書き（AGENTS.md を推奨）。既定: 未設定。
-# instructions = ""
-
-# 履歴圧縮（compaction）用プロンプトのインライン上書き。既定: 未設定。
-# compact_prompt = ""
-
-# 組み込みのベース指示をファイルパスで上書きします。既定: 未設定。
-# model_instructions_file = "/absolute/or/relative/path/to/instructions.txt"
-
-# 移行メモ: experimental_instructions_file は model_instructions_file に名称変更されました（非推奨）。
-
-# コンパクトプロンプトの上書きをファイルから読み込みます。既定: 未設定。
-# experimental_compact_prompt_file = "/absolute/or/relative/path/to/compact_prompt.txt"
-
-################################################################################
-# Notifications
-################################################################################
-
-# 外部通知プログラム（argv 配列）。未設定の場合: 無効。
-# 例: notify = ["notify-send", "Codex"]
+# * Notifications
 # notify = ["python3", "/home/zanth/.local/bin/codex_notify.py"]
 
-################################################################################
-# Approval & Sandbox
-################################################################################
+# * Approval & Sandbox
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
 
-# コマンド承認を求めるタイミング:
-# - untrusted: 既知の安全な読み取り専用コマンドのみ自動実行；それ以外は確認
-# - on-failure: サンドボックスで自動実行し、失敗時のみ昇格のため確認
-# - on-request: モデルが確認の要否を判断（既定）
-# - never: いかなる場合も確認しない（危険）
-# approval_policy = "on-request"
-
-# ツール呼び出し時のファイルシステム/ネットワークのサンドボックス方針:
-# - read-only（既定）
-# - workspace-write
-# - danger-full-access（サンドボックスなし；非常に危険）
-# sandbox_mode = "workspace-write"
-
-################################################################################
-# Authentication & Login
-################################################################################
-
+# * Authentication & Login
 # CLI のログイン認証情報の保存先: file（既定） | keyring | auto
 cli_auth_credentials_store = "file"
 
-# ChatGPT 認証フロー用のベースURL（OpenAI API ではありません）。既定:
-# chatgpt_base_url = "https://chatgpt.com/backend-api/"
-
-# ChatGPT ログインを特定の workspace id に制限します。既定: 未設定。
-# forced_chatgpt_workspace_id = ""
-
-# Codex が通常は自動選択するログイン方式を強制します。既定: 未設定。
-# 使用可能な値: chatgpt | api
-# forced_login_method = "chatgpt"
-
-# MCP の OAuth 認証情報の優先保存先: auto（既定） | file | keyring
-# mcp_oauth_credentials_store = "auto"
-
-# MCP OAuth コールバック用の固定ポート（1-65535）。既定: 未設定。
-# mcp_oauth_callback_port = 4321
-
-################################################################################
-# Project Documentation Controls
-################################################################################
-
-# 初回ターンの指示に埋め込む AGENTS.md の最大バイト数。既定: 32768
-# project_doc_max_bytes = 32768
-
+# * Project Documentation Controls
 # ディレクトリ階層で AGENTS.md が見つからない場合の、順序付きフォールバック。既定: []
-# project_doc_fallback_filenames = [AGENTS.local.md, CLAUDE.md, CLAUDE.local.md]
-
+project_doc_fallback_filenames = ["AGENTS.local.md", "CLAUDE.md", "CLAUDE.local.md"]
 # 親ディレクトリを探索する際に使うプロジェクトルートのマーカーとなるファイル名。既定: [".git"]
-# project_root_markers = [".git"]
+project_root_markers = [".git"]
 
-################################################################################
-# History & File Opener
-################################################################################
-
+# * History & File Opener
 # クリック可能な引用の URI スキーム: vscode（既定） | vscode-insiders | windsurf | cursor | none
-# file_opener = "vscode"
+file_opener = "vscode"
 
-################################################################################
-# UI, Notifications, and Misc
-################################################################################
-
+# * UI, Notifications, and Misc
 # 内部推論イベントを出力から抑止します。既定: false
-# hide_agent_reasoning = false
-
+hide_agent_reasoning = false
 # 利用可能な場合に生の推論内容を表示します。既定: false
-# show_raw_agent_reasoning = false
-
+show_raw_agent_reasoning = false
 # TUI のバースト貼り付け検知を無効化します。既定: false
-# disable_paste_burst = false
-
+disable_paste_burst = false
 # Windows のオンボーディング承諾を追跡します（Windows のみ）。既定: false
-# windows_wsl_setup_acknowledged = false
-
+windows_wsl_setup_acknowledged = false
 # 起動時にアップデート確認を行います。既定: true
-# check_for_update_on_startup = true
+check_for_update_on_startup = true
+personality = "pragmatic"
 
-# personality = "pragmatic"
-
-################################################################################
-# Profiles (named presets)
-################################################################################
-
-# アクティブなプロファイル名。未設定の場合、プロファイルは適用されません。
-# profile = "default"
-
-################################################################################
-# Skills (per-skill overrides)
-################################################################################
-
-# 削除せずに特定のスキルを無効化/再有効化します。
-# [[skills.config]]
-# path = "/path/to/skill"
-# enabled = false
-
-################################################################################
-# Sandbox settings (tables)
-################################################################################
-
+# * Sandbox settings (tables)
 # sandbox_mode = "workspace-write" のときだけ使用される追加設定。
-# [sandbox_workspace_write]
+[sandbox_workspace_write]
 # ワークスペース（cwd）以外に書き込み可能にするルートを追加します。既定: []
-# writable_roots = []
+writable_roots = ["~/.codex", "/tmp"]
 # サンドボックス内での外向きネットワークアクセスを許可します。既定: false
-# network_access = false
-# writable_roots から $TMPDIR を除外します。既定: false
-# exclude_tmpdir_env_var = false
-# writable_roots から /tmp を除外します。既定: false
-# exclude_slash_tmp = false
+network_access = true
 
-################################################################################
-# Shell Environment Policy for spawned processes (table)
-################################################################################
-
-# [shell_environment_policy]
+# * Shell Environment Policy for spawned processes (table)
+[shell_environment_policy]
 # inherit: all（既定） | core | none
-# inherit = "all"
+inherit = "all"
 # KEY/SECRET/TOKEN（大文字小文字を区別しない）を含む名前に対する既定の除外をスキップします。既定: true
-# ignore_default_excludes = true
-# 削除する（大文字小文字を区別しない）glob パターン（例: "AWS_*", "AZURE_*"）。既定: []
-# exclude = []
-# 明示的な key/value 上書き（常に最優先）。既定: {}
-# set = {}
-# ホワイトリスト；空でない場合、マッチする変数のみ残します。既定: []
-# include_only = []
-# 実験的: ユーザーのシェルプロファイル経由で実行します。既定: false
-# experimental_use_profile = false
+ignore_default_excludes = true
 
-################################################################################
-# History (table)
-################################################################################
-
-# [history]
+# * History (table)
+[history]
 # save-all（既定） | none
-# persistence = "save-all"
+persistence = "save-all"
 # Maximum bytes for history file; oldest entries are trimmed when exceeded. Example: 5242880
-# max_bytes = 5242880
+max_bytes = 5242880
 
-################################################################################
-# UI, Notifications, and Misc (tables)
-################################################################################
-
-# [tui]
+# *  UI, Notifications, and Misc (tables)
+[tui]
 # TUI からのデスクトップ通知: boolean またはフィルター済みリスト。既定: true
 # Examples: false | ["agent-turn-complete", "approval-requested"]
-# notifications = true
-
+notifications = true
 # ウェルカム/ステータス/スピナーのアニメーションを有効化します。既定: true
-# animations = true
-
+animations = true
 # ウェルカム画面でオンボーディングのツールチップを表示します。既定: true
-# show_tooltips = true
-
+show_tooltips = true
 # 代替スクリーンの使用を制御します（Zellij ではスクロールバック保持のため自動で無効化）。
-# alternate_screen = "auto"
+alternate_screen = "auto"
 
 # `/feedback` からフィードバック送信できるかを制御します。既定: true
 [feedback]
 enabled = false
 
-# 製品内のお知らせ（ほとんどは Codex により自動設定）。
-# [notice]
-# hide_full_access_warning = true
-# hide_world_writable_warning = true
-# hide_rate_limit_model_nudge = true
-# hide_gpt5_1_migration_prompt = true
-# "hide_gpt-5.1-codex-max_migration_prompt" = true
-# model_migrations = { "gpt-4.1" = "gpt-5.1" }
+# * Centralized Feature Flags (preferred)
 
-################################################################################
-# Centralized Feature Flags (preferred)
-################################################################################
-
-[features]
-# 既定値を受け入れるには、このテーブルを空のままにしてください。明示的な boolean を設定して opt in/out します。
-# shell_tool = true
-# unified_exec = false
-# shell_snapshot = false
-# apply_patch_freeform = false
-# experimental_windows_sandbox = false
-# elevated_windows_sandbox = false
-# remote_models = false
-# child_agents_md = false
-# collaboration_modes = true
-
-################################################################################
-# Define MCP servers under this table. Leave empty to disable.
-################################################################################
-
+# * Define MCP servers under this table. Leave empty to disable.
 [mcp_servers]
 
 [mcp_servers.figma]
@@ -313,47 +131,7 @@ args = [
 ]
 enabled = false
 
-# [model_providers]
-
-# --- 例: OpenAI を明示的な base URL またはヘッダーで上書き ---
-# [model_providers.openai]
-# name = "OpenAI"
-# base_url = "https://api.openai.com/v1"         # 未設定時の既定
-# wire_api = "responses"                         # "responses" | "chat"（既定は環境により異なる）
-# # requires_openai_auth = true                    # 組み込み OpenAI は既定で true
-# # request_max_retries = 4                        # 既定 4; 最大 100
-# # stream_max_retries = 5                         # 既定 5; 最大 100
-# # stream_idle_timeout_ms = 300000                # 既定 300_000（5分）
-# # experimental_bearer_token = "sk-example"      # 任意: 開発用途のみの直接 bearer token
-# # http_headers = { "X-Example" = "value" }
-# # env_http_headers = { "OpenAI-Organization" = "OPENAI_ORGANIZATION", "OpenAI-Project" = "OPENAI_PROJECT" }
-
-# --- 例: Azure（エンドポイントにより Chat/Responses） ---
-# [model_providers.azure]
-# name = "Azure"
-# base_url = "https://YOUR_PROJECT_NAME.openai.azure.com/openai"
-# wire_api = "responses"                          # エンドポイントに応じて "chat" も可
-# query_params = { api-version = "2025-04-01-preview" }
-# env_key = "AZURE_OPENAI_API_KEY"
-# # env_key_instructions = "環境変数に AZURE_OPENAI_API_KEY を設定してください"
-
-# --- 例: ローカル OSS（例: Ollama 互換） ---
-# [model_providers.ollama]
-# name = "Ollama"
-# base_url = "http://localhost:11434/v1"
-# wire_api = "chat"
-
-################################################################################
-# Profiles (named presets)
-################################################################################
-
-# [profiles]
-
-################################################################################
-# Projects (trust levels)
-################################################################################
-
-# 特定の worktree を trusted / untrusted としてマークします。
+# * Projects (trust levels)
 [projects]
 # [projects."/absolute/path/to/project"]
 # trust_level = "trusted"  # または "untrusted"
@@ -366,44 +144,3 @@ trust_level = "trusted"
 
 [projects."/home/zanth/repos/tdx/tdx"]
 trust_level = "trusted"
-
-################################################################################
-# OpenTelemetry (OTEL) - disabled by default
-################################################################################
-
-# [otel]
-# ログにユーザープロンプト本文を含めます。既定: false
-# log_user_prompt = false
-# テレメトリに付与する環境ラベル。既定: "dev"
-# environment = "dev"
-# エクスポーター: none（既定） | otlp-http | otlp-grpc
-# exporter = "none"
-# トレースエクスポーター: none（既定） | otlp-http | otlp-grpc
-# trace_exporter = "none"
-
-# 例: OTLP/HTTP エクスポーター設定
-# [otel.exporter."otlp-http"]
-# endpoint = "https://otel.example.com/v1/logs"
-# protocol = "binary"                         # "binary" | "json"
-
-# [otel.exporter."otlp-http".headers]
-# "x-otlp-api-key" = "${OTLP_TOKEN}"
-
-# 例: OTLP/gRPC エクスポーター設定
-# [otel.exporter."otlp-grpc"]
-# endpoint = "https://otel.example.com:4317",
-# headers = { "x-otlp-meta" = "abc123" }
-
-# 例: 相互 TLS を用いた OTLP エクスポーター
-# [otel.exporter."otlp-http"]
-# endpoint = "https://otel.example.com/v1/logs"
-# protocol = "binary"
-
-# [otel.exporter."otlp-http".headers]
-# "x-otlp-api-key" = "${OTLP_TOKEN}"
-
-# [otel.exporter."otlp-http".tls]
-# ca-certificate = "certs/otel-ca.pem"
-# client-certificate = "/etc/codex/certs/client.pem"
-# client-private-key = "/etc/codex/certs/client-key.pem"
-# client-private-key = "/etc/codex/certs/client-key.pem"
