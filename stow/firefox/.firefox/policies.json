@@ -3,7 +3,12 @@
     "WebsiteFilter": {
       "Block": ["<all_urls>"],
       "Exceptions": [
-        "*://localhost:*/*",
+        "*://localhost/*",
+
+        "*://*.microsoft.com/*",
+        "*://*.visualstudio.com/*",
+
+        "*://*.nvidia.com/*",
 
         "*://chatgpt.com/*",
         "*://*.chatgpt.com/*",
@@ -16,10 +21,33 @@
         "*://*.oaiusercontent.com/*",
         "*://challenges.cloudflare.com/*",
 
+        "*://*.claude.com/*",
+
+        "*://*.figma.com/*",
+        "*://*.figma.jp/*",
+
+        "*://*.shadcn.net/*",
+        "*://*.shadcn.com/*",
+
+        "*://*.note.com/*",
+
+        "*://*.wikipedia.org/*",
+
         "*://nextdns.io/*",
         "*://*.nextdns.io/*",
 
-        "*://www.google.com/*",
+        "*://www.asusrouter.com/*",
+
+        "*://amazon.com/*",
+        "*://*.amazon.com/*",
+        "*://amazon.co.jp/*",
+        "*://*.amazon.co.jp/*",
+
+        "*://www.siroca.co.jp/*",
+
+        "*://google.com/*",
+        "*://*.google.com/*",
+        "*://antigravity.google/*",
 
         "*://gitlab.zanthing.xyz/*",
 
@@ -28,8 +56,20 @@
 
         "*://docs.astral.sh/*",
 
+        "*://downloads.khinsider.com/*",
+
+        "*://archive.org/*",
+
+        "*://soundcloud.com/*",
+
+        "*://www.intel.co.jp/*",
+
         "*://github.com/*",
+        "*://*.github.com/*",
         "*://*.github.io/*",
+
+        "*://ubuntu.com/*",
+        "*://*.ubuntu.com/*",
 
         "*://qiita.com/*",
         "*://*.qiita.com/*",
