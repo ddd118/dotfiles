@@ -3,9 +3,6 @@ apt_base_packages:
   - curl
   - wget
   - gnupg
-  - lsb-release
-  - software-properties-common
-  - apt-transport-https
   - git
   - zsh
   - unzip
@@ -17,13 +14,12 @@ apt_base_packages:
   - xclip
   # locale の生成/設定に必要 (特に Debian/最小コンテナ)
   - locales
-  - python3
   # Ansible apt モジュールが python3-apt を要求することがある
   - python3-apt
-  - python3-pip
 
 apt_additional_packages:
   - autossh
+  - gh
   - jq
   - ripgrep
   - shellcheck
@@ -32,13 +28,6 @@ apt_additional_packages:
   - openssh-server
   - peco
   - poppler-utils
-  - python3-venv
-  # Rust 製ツールをソースからビルドする際に必要 (例: yazi)
-  - build-essential
-  - pkg-config
-  # mise 経由で Ruby をソースビルドする際に必要
-  - libffi-dev
-  - libyaml-dev
   - zip
   - stow
 
