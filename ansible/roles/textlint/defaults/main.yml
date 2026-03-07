@@ -1,5 +1,0 @@
-textlint_dir: "{{ ansible_env.HOME }}/.local/share/textlint-hub"
-
-textlint_packages:
-  - textlint
-  - textlint-rule-preset-ja-spacing
