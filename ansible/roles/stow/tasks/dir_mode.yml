@@ -1,0 +1,139 @@
+---
+- name: Ensure parent directories for dir bind targets
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/{{ item.target_rel_path | dirname }}"
+    state: directory
+  loop: "{{ stow_dir_bind_targets | default([]) }}"
+
+- name: Stat dir bind targets in HOME
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/{{ item.target_rel_path }}"
+    follow: false
+  loop: "{{ stow_dir_bind_targets | default([]) }}"
+  register: stow_dir_target_stats
+  changed_when: false
+
+- name: Inspect existing directory bind targets
+  ansible.builtin.find:
+    paths: "{{ ansible_env.HOME }}/{{ item.item.target_rel_path }}"
+    recurse: false
+    hidden: true
+    file_type: any
+    patterns: '*'
+  loop: "{{ stow_dir_target_stats.results | default([]) }}"
+  register: stow_dir_target_contents
+  changed_when: false
+  when: item.stat.isdir | default(false)
+
+- name: Classify mismatched symlink targets for dir mode
+  ansible.builtin.set_fact:
+    stow_dir_mode_mismatched_symlink_targets: >-
+      {%- set mismatched = [] -%}
+      {%- for result in (stow_dir_target_stats.results | default([])) -%}
+        {%- set expected_source = settings_repo ~ '/stow/' ~ result.item.package ~ '/' ~ result.item.target_rel_path -%}
+        {%- if (result.stat.islnk | default(false)) and ((result.stat.lnk_source | default('')) != expected_source) -%}
+          {%- set _ = mismatched.append({'path': result.item.target_rel_path, 'actual': (result.stat.lnk_source | default('')), 'expected': expected_source}) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ mismatched }}
+  changed_when: false
+
+- name: Classify invalid existing types for dir mode
+  ansible.builtin.set_fact:
+    stow_dir_mode_invalid_type_targets: >-
+      {%- set invalid = [] -%}
+      {%- for result in (stow_dir_target_stats.results | default([])) -%}
+        {%- set is_link = result.stat.islnk | default(false) -%}
+        {%- set is_dir = result.stat.isdir | default(false) -%}
+        {%- if (result.stat.exists | default(false)) and (not is_link) and (not is_dir) -%}
+          {%- set detected_type = 'other' -%}
+          {%- if result.stat.isreg | default(false) -%}
+            {%- set detected_type = 'file' -%}
+          {%- elif result.stat.ischr | default(false) -%}
+            {%- set detected_type = 'char_device' -%}
+          {%- elif result.stat.isblk | default(false) -%}
+            {%- set detected_type = 'block_device' -%}
+          {%- elif result.stat.issock | default(false) -%}
+            {%- set detected_type = 'socket' -%}
+          {%- elif result.stat.isfifo | default(false) -%}
+            {%- set detected_type = 'fifo' -%}
+          {%- endif -%}
+          {%- set _ = invalid.append({'path': result.item.target_rel_path, 'type': detected_type}) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ invalid }}
+  changed_when: false
+
+- name: Classify directory bind targets by emptiness
+  ansible.builtin.set_fact:
+    stow_dir_mode_nonempty_directory_targets: >-
+      {%- set nonempty = [] -%}
+      {%- for result in (stow_dir_target_contents.results | default([])) -%}
+        {%- if not (result.skipped | default(false)) and ((result.matched | default(0) | int) > 0) -%}
+          {%- set _ = nonempty.append(result.item.item.target_rel_path) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ nonempty | unique | list }}
+    stow_dir_mode_empty_directory_targets: >-
+      {%- set empty = [] -%}
+      {%- for result in (stow_dir_target_contents.results | default([])) -%}
+        {%- if not (result.skipped | default(false)) and ((result.matched | default(0) | int) == 0) -%}
+          {%- set _ = empty.append(result.item.item.target_rel_path) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ empty | unique | list }}
+  changed_when: false
+
+- name: Fail on mismatched symlink targets for dir mode
+  ansible.builtin.fail:
+    msg: |-
+      stow dir モードで不一致シンボリックリンクが見つかりました。手動整理後に再実行してください。
+      対象（path: actual -> expected）:
+      {% for item in stow_dir_mode_mismatched_symlink_targets %}
+      - {{ item.path }}: {{ item.actual }} -> {{ item.expected }}
+      {% endfor %}
+  when: stow_dir_mode_mismatched_symlink_targets | length > 0
+
+- name: Fail on invalid existing types for dir mode
+  ansible.builtin.fail:
+    msg: |-
+      stow dir モードで型不一致の既存パスが見つかりました。手動整理後に再実行してください。
+      対象（path: type）:
+      {% for item in stow_dir_mode_invalid_type_targets %}
+      - {{ item.path }}: {{ item.type }}
+      {% endfor %}
+  when: stow_dir_mode_invalid_type_targets | length > 0
+
+- name: Fail on non-empty directories for dir mode
+  ansible.builtin.fail:
+    msg: |-
+      stow dir モード対象に非空ディレクトリが存在します。手動整理後に再実行してください。
+      対象:
+      {% for item in stow_dir_mode_nonempty_directory_targets %}
+      - {{ item }}
+      {% endfor %}
+  when: stow_dir_mode_nonempty_directory_targets | length > 0
+
+- name: Remove empty directories for dir mode before restow
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/{{ item }}"
+    state: absent
+  loop: "{{ stow_dir_mode_empty_directory_targets }}"
+  when: stow_dir_mode_empty_directory_targets | length > 0
+
+- name: Deploy stow dir-mode packages
+  ansible.builtin.command:
+    cmd: >-
+      stow --restow -v
+      -d {{ settings_repo }}/stow
+      -t {{ ansible_env.HOME }}
+      {{ stow_dir_packages_effective | join(' ') }}
+  register: stow_dir_mode_result
+  changed_when: >-
+    (stow_dir_mode_result.stdout is search('LINK:'))
+    or (stow_dir_mode_result.stderr is search('LINK:'))
+    or (stow_dir_mode_result.stdout is search('UNLINK:'))
+    or (stow_dir_mode_result.stderr is search('UNLINK:'))
+    or (stow_dir_mode_result.stdout is search('MKDIR:'))
+    or (stow_dir_mode_result.stderr is search('MKDIR:'))
+  failed_when: stow_dir_mode_result.rc != 0
