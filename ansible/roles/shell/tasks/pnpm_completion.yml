@@ -13,26 +13,19 @@
     mode: "0755"
   when: pnpm_bin.rc == 0
 
-- name: Check existing pnpm completion file
-  ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.zsh/completions/_pnpm"
-  register: pnpm_completion_file
-  when: pnpm_bin.rc == 0
-
-- name: Generate pnpm completion script
-  ansible.builtin.command: pnpm completion zsh
-  register: pnpm_completion
-  changed_when: false
-  environment: "{{ shell_mise_env }}"
+- name: Generate and install pnpm completion script
   when:
     - pnpm_bin.rc == 0
     - not ansible_check_mode
+  block:
+    - name: Generate pnpm completion script
+      ansible.builtin.command: pnpm completion zsh
+      register: pnpm_completion
+      changed_when: false
+      environment: "{{ shell_mise_env }}"
 
-- name: Install pnpm completion script
-  ansible.builtin.copy:
-    content: "{{ pnpm_completion.stdout }}"
-    dest: "{{ ansible_env.HOME }}/.zsh/completions/_pnpm"
-    mode: "0644"
-  when:
-    - pnpm_bin.rc == 0
-    - (not ansible_check_mode) or (pnpm_completion_file.stat.exists | default(false))
+    - name: Install pnpm completion script
+      ansible.builtin.copy:
+        content: "{{ pnpm_completion.stdout }}"
+        dest: "{{ ansible_env.HOME }}/.zsh/completions/_pnpm"
+        mode: "0644"

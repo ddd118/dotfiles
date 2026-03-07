@@ -12,3 +12,13 @@
     dest: "{{ zsh_custom }}/themes/powerlevel10k"
     depth: 1
     version: master
+
+- name: Clone zsh plugins
+  ansible.builtin.git:
+    repo: "{{ item.repo }}"
+    dest: "{{ zsh_custom }}/plugins/{{ item.name }}"
+    depth: 1
+    version: "{{ item.version | default(omit) }}"
+  loop: "{{ zsh_plugins }}"
+  loop_control:
+    label: "{{ item.name }}"

@@ -23,15 +23,3 @@
       ansible.builtin.file:
         path: /tmp/git-worktree-runner
         state: absent
-
-- name: Ensure completions directory
-  ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.zsh/completions"
-    state: directory
-    mode: "0755"
-
-- name: Download git-gtr completion
-  ansible.builtin.get_url:
-    url: https://raw.githubusercontent.com/coderabbitai/git-worktree-runner/main/completions/_git-gtr
-    dest: "{{ ansible_env.HOME }}/.zsh/completions/_git-gtr"
-    mode: "0644"
