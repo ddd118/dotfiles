@@ -43,6 +43,10 @@ scripts/        ... 再利用性のあるユーティリティスクリプト
     - コンテナでは除外: `apt_container_exclude_packages`
 - **mise のランタイムを追加したい**
   - `stow/config/.config/mise/config.toml` の `[tools]`
+  - `yazi` 本体もここで管理します
+- **yazi の flavor を追加したい**
+  - `ansible/roles/yazi/defaults/main.yml` の `yazi_flavors`
+  - `ansible-playbook ansible/site.yml --tags yazi` は yazi 本体ではなく flavor の補助セットアップです
 - **curl で入れるツールを追加したい**
   - `ansible/roles/curl_tools/tasks/main.yml`
 - **stow でリンクするパッケージを増やしたい**
