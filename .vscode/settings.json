@@ -1,6 +1,7 @@
 {
   "cSpell.words": [
     "appimage",
+    "asusrouter",
     "btime",
     "cand",
     "chdir",
@@ -32,6 +33,7 @@
     "jsonfile",
     "keymap",
     "keyrings",
+    "khinsider",
     "kubepods",
     "libyaml",
     "lineinfile",
@@ -48,6 +50,7 @@
     "ntype",
     "oaistatic",
     "oaiusercontent",
+    "oneline",
     "pacman",
     "peco",
     "pipx",
@@ -61,6 +64,8 @@
     "rustup",
     "scrolloff",
     "selectattr",
+    "siroca",
+    "soundcloud",
     "synthwave",
     "termux",
     "tlsv",

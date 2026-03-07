@@ -11,10 +11,6 @@
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"]
     },
-    "figma-local-mcp": {
-      "type": "http",
-      "url": "http://127.0.0.1:3845/mcp"
-    },
     "figma-remote-mcp": {
       "type": "http",
       "url": "https://mcp.figma.com/mcp"
