@@ -41,6 +41,7 @@
   roles:
     - role: packages
       tags: [packages]
+      when: not (is_container | bool)
     - role: stow
       tags: [stow]
     - role: fonts
@@ -53,8 +54,6 @@
       tags: [curl_tools]
     - role: shell
       tags: [shell]
-    - role: textlint
-      tags: [textlint]
     - role: yazi
       tags: [yazi]
     - role: docker

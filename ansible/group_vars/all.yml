@@ -27,7 +27,7 @@ is_container: >-
 # ==================================================
 allow_root: false
 
-install_docker: "{{ not is_container }}"
+install_docker: "{{ (not is_wsl) and (not is_container) }}"
 install_gui_apps: "{{ (not is_wsl) and (not is_container) }}"
 install_fonts: "{{ (not is_wsl) and (not is_container) }}"
 install_mise: true
