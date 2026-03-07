@@ -12,20 +12,22 @@
   register: systemd_user_check
   changed_when: false
   failed_when: false
+  tags: [always]
 
 - name: Set systemd availability fact
   ansible.builtin.set_fact:
     systemd_user_available: "{{ systemd_user_check.rc == 0 }}"
   changed_when: false
+  tags: [always]
 
 - name: Explain why systemd tasks are skipped
   ansible.builtin.debug:
     msg: |
       systemd --user が利用できないため、systemd 関連のタスクをスキップします。
       (典型例: Dev Container / systemd 無効の WSL)
-      rc={{ systemd_user_check.rc }}
+      rc={{ systemd_user_check.rc | default('unknown') }}
       stderr={{ systemd_user_check.stderr | default('') }}
-  when: not (systemd_user_available | bool)
+  when: not (systemd_user_available | default(false) | bool)
   tags: [always]
 
 - name: Reload systemd user daemon
