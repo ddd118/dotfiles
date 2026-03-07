@@ -1,9 +1,6 @@
 yazi_env:
   PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.HOME }}/.local/share/mise/shims:{{ ansible_env.PATH }}"
 
-yazi_plugins:
-  - "yazi-rs/plugins:full-border"
-
 yazi_flavors:
   - "yazi-rs/flavors:catppuccin-macchiato"
   - "yazi-rs/flavors:catppuccin-latte"

@@ -13,18 +13,6 @@
   failed_when: false
   environment: "{{ yazi_env }}"
 
-- name: Install yazi plugins
-  ansible.builtin.command:
-    cmd: ya pkg add {{ item }}
-  loop: "{{ yazi_plugins }}"
-  environment: "{{ yazi_env }}"
-  register: ya_pkg
-  changed_when: false
-  failed_when: false
-  when:
-    - yazi_check.rc == 0
-    - ya_check.rc == 0
-
 - name: Install yazi flavors
   ansible.builtin.command:
     cmd: ya pkg add {{ item }}
@@ -37,11 +25,11 @@
     - yazi_check.rc == 0
     - ya_check.rc == 0
 
-- name: Explain why yazi plugin installation is skipped
+- name: Explain why yazi flavor installation is skipped
   ansible.builtin.debug:
     msg: |
-      yazi/ya が見つからないため yazi plugin/flavor の追加をスキップします。
-      mise の runtime 設定に yazi を含めてください。
+      mise で yazi を入れていないため yazi flavor の追加をスキップします。
+      stow/config/.config/mise/config.toml の [tools] に yazi を含めてください。
   when:
     - yazi_check.rc != 0 or ya_check.rc != 0
-    - (yazi_plugins | length > 0) or (yazi_flavors | length > 0)
+    - yazi_flavors | length > 0
