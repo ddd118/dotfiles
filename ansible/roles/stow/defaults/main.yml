@@ -2,9 +2,11 @@ stow_packages:
   - dotfiles
   - claude
   - claude-commands
+  - claude-skills
   - codex
   - codex-prompts
   - codex-rules
+  - codex-skills
   - config
   - config-systemd-user
   - cursor
