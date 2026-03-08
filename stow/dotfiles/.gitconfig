@@ -8,6 +8,7 @@
 	autocrlf = input
 	ignorecase = false
 	eol = lf
+	hooksPath = ~/.githooks
 [fetch]
 	prune = true
 	pruneTags = true

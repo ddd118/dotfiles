@@ -27,7 +27,7 @@ need_cmd() {
 
 need_cmd git
 need_cmd zip
-need_cmd flock || true
+need_cmd flock
 
 # * 1) リポジトリパスの取得
 #     カレントリポジトリのルートと、複数ワークツリー使用時のベースワークツリーを特定する
@@ -105,8 +105,7 @@ while :; do
     extras=(
         .claude/settings.local.json
         .notes
-        customInstruction.prompt.md
-        snippet.local.md
+        AGENTS.prompt.md
         todo.txt
         waiting.txt
         someday.txt
