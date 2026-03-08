@@ -37,6 +37,9 @@
             ~ plemoljp_release_version
             ~ '.zip'
           }}
+
+    - name: Build PlemolJP archive URL
+      ansible.builtin.set_fact:
         plemoljp_asset_download_url: >-
           {{
             'https://github.com/yuru7/PlemolJP/releases/download/'
