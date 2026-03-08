@@ -10,7 +10,7 @@ Linux の初期セットアップ用プロジェクト
 
 ## ディレクトリ構成
 
-```
+```text
 stow/           ... Stow パッケージ群（dotfiles, claude, config 等）
 ansible/        ... Ansible playbook・roles
 scripts/        ... 再利用性のあるユーティリティスクリプト
@@ -54,6 +54,8 @@ scripts/        ... 再利用性のあるユーティリティスクリプト
     - ファイル単位: `stow_file_packages`
     - ディレクトリ単位: `stow_dir_packages`
     - ディレクトリ単位の貼り先: `stow_dir_bind_targets`
+  - 既存ディレクトリ配下へ skills のようなサブディレクトリ単位で差し込む場合は、
+    `dir_mode` で個別の `target_rel_path` を定義する
 
 ## メモ書き
 
