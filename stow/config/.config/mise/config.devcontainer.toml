@@ -1,3 +1,5 @@
 [tools]
 yazi = "latest"
 codex = "latest"
+uv = "latest"
+python = "latest"
