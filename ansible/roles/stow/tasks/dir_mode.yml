@@ -3,13 +3,13 @@
   ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/{{ item.target_rel_path | dirname }}"
     state: directory
-  loop: "{{ stow_dir_bind_targets | default([]) }}"
+  loop: "{{ stow_dir_bind_targets_effective | default([]) }}"
 
 - name: Stat dir bind targets in HOME
   ansible.builtin.stat:
     path: "{{ ansible_env.HOME }}/{{ item.target_rel_path }}"
     follow: false
-  loop: "{{ stow_dir_bind_targets | default([]) }}"
+  loop: "{{ stow_dir_bind_targets_effective | default([]) }}"
   register: stow_dir_target_stats
   changed_when: false
 

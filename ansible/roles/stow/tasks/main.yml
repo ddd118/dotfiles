@@ -2,14 +2,29 @@
 - name: Resolve stow package groups
   ansible.builtin.set_fact:
     stow_file_packages_effective: "{{ stow_file_packages | default(stow_packages | default([])) }}"
-    stow_dir_packages_effective: "{{ stow_dir_packages | default([]) }}"
+    stow_dir_packages_effective: >-
+      {{
+        (stow_dir_packages | default([]))
+        | reject('equalto', 'config-systemd-user')
+        | list
+        if not (is_wsl | default(false) | bool)
+        else (stow_dir_packages | default([]))
+      }}
+    stow_dir_bind_targets_effective: >-
+      {{
+        (stow_dir_bind_targets | default([]))
+        | rejectattr('package', 'equalto', 'config-systemd-user')
+        | list
+        if not (is_wsl | default(false) | bool)
+        else (stow_dir_bind_targets | default([]))
+      }}
   changed_when: false
 
 - name: Validate dir bind target definitions
   ansible.builtin.assert:
     that:
       - >-
-        (stow_dir_packages_effective | difference((stow_dir_bind_targets | default([])) | map(attribute='package') | list) | length) == 0
+        (stow_dir_packages_effective | difference((stow_dir_bind_targets_effective | default([])) | map(attribute='package') | list) | length) == 0
     fail_msg: >-
       stow_dir_packages に含まれる package すべてへ stow_dir_bind_targets を定義してください。
   when: stow_dir_packages_effective | length > 0
