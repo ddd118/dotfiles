@@ -80,18 +80,6 @@
     "zstd"
   ],
   "peacock.remoteColor": "#832561",
-  "tabRouter.rules": [
-    {
-      "matchField": "fileName",
-      "pattern": "(ansible/roles/[^/]+/defaults)",
-      "targetGroup": 1
-    },
-    {
-      "matchField": "fileName",
-      "pattern": "(ansible/roles/[^/]+/tasks)",
-      "targetGroup": 2
-    }
-  ],
   "workbench.colorCustomizations": {
     "activityBar.activeBackground": "#ab307e",
     "activityBar.background": "#ab307e",
