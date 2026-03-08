@@ -17,3 +17,7 @@ node_modules
 
 # Systemd unit files
 *.target.wants
+
+# Ignore temporary files
+.tmp
+
