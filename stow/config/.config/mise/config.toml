@@ -13,3 +13,8 @@ gemini = "latest"
 dotnet = "latest"
 rust = "latest"
 yazi = "latest"
+
+[settings]
+
+[settings.ruby]
+compile = false
