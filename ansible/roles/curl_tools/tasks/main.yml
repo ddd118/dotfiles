@@ -1,4 +1,17 @@
 ---
+# --- Claude Code ---
+- name: Check if Claude Code is installed
+  ansible.builtin.command: bash -lc "command -v claude"
+  register: claude_check
+  changed_when: false
+  failed_when: false
+
+- name: Install Claude Code via native installer
+  ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | bash
+  when:
+    - claude_check.rc != 0
+    - not ansible_check_mode
+
 # --- vim-plug ---
 - name: Check vim autoload directory
   ansible.builtin.stat:
