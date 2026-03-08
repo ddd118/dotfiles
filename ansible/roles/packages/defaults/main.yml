@@ -28,6 +28,7 @@ apt_additional_packages:
   - openssh-server
   - peco
   - poppler-utils
+  - todotxt-cli
   - zip
   - stow
 

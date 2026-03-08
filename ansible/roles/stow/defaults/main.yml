@@ -31,18 +31,28 @@ stow_file_packages:
 
 stow_dir_packages:
   - claude-commands
+  - claude-skills
   - codex-prompts
   - codex-rules
+  - codex-skills
   - config-systemd-user
   - ssh-conf-d
 
 stow_dir_bind_targets:
   - package: claude-commands
     target_rel_path: .claude/commands
+  - package: claude-skills
+    target_rel_path: .claude/skills/how-to-component
+  - package: claude-skills
+    target_rel_path: .claude/skills/plan
   - package: codex-prompts
     target_rel_path: .codex/prompts
   - package: codex-rules
     target_rel_path: .codex/rules
+  - package: codex-skills
+    target_rel_path: .codex/skills/how-to-component
+  - package: codex-skills
+    target_rel_path: .codex/skills/plan
   - package: config-systemd-user
     target_rel_path: .config/systemd/user
   - package: ssh-conf-d
