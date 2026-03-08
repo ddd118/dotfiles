@@ -43,7 +43,9 @@ scripts/        ... 再利用性のあるユーティリティスクリプト
     - コンテナでは除外: `apt_container_exclude_packages`
 - **mise のランタイムを追加したい**
   - `stow/config/.config/mise/config.toml` の `[tools]`
-  - `yazi` 本体もここで管理します
+  - ローカル Linux / WSL では `yazi` 本体もここで管理します
+  - dotfiles 経由の Dev Container では `stow/config/.config/mise/config.devcontainer.toml` の内容で `~/.config/mise/config.toml` を差し替えます
+  - 現在の Dev Container 用最小構成は `yazi` と `codex` です。`codex` は `github:openai/codex` で直接管理します
   - `claude` は公式推奨に合わせて native installer で導入するため、ここには追加しません
 - **yazi の flavor を追加したい**
   - `ansible/roles/yazi/defaults/main.yml` の `yazi_flavors`
@@ -79,6 +81,10 @@ docker run --rm -it \
 
 VS Code Dev Containers の dotfiles 機能は、dotfiles リポジトリを clone した後に
 `install.sh` / `setup.sh` などの bootstrap script を実行できます。
+
+dotfiles 経由の Dev Container では `mise` ロール自体は動作しますが、
+`stow` 後に `~/.config/mise/config.toml` を最小構成へ差し替えます。
+これにより `.zshrc` を増やさず、通常環境はフル構成のまま維持します。
 
 例: VS Code の User Settings (`settings.json`) に追加
 
