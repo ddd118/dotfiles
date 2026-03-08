@@ -10,3 +10,7 @@
 - name: Include pnpm completion setup
   ansible.builtin.include_tasks: pnpm_completion.yml
   tags: [shell, pnpm]
+
+- name: Include mise completion setup
+  ansible.builtin.include_tasks: mise_completion.yml
+  tags: [shell, mise]

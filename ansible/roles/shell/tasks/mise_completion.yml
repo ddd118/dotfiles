@@ -1,0 +1,31 @@
+---
+- name: Check if mise is available from local bin
+  ansible.builtin.command: bash -lc "command -v mise"
+  register: mise_bin
+  changed_when: false
+  failed_when: false
+  environment: "{{ shell_mise_env }}"
+
+- name: Ensure completions directory
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.zsh/completions"
+    state: directory
+    mode: "0755"
+  when: mise_bin.rc == 0
+
+- name: Generate and install mise completion script
+  when:
+    - mise_bin.rc == 0
+    - not ansible_check_mode
+  block:
+    - name: Generate mise completion script
+      ansible.builtin.command: mise completion zsh
+      register: mise_completion
+      changed_when: false
+      environment: "{{ shell_mise_env }}"
+
+    - name: Install mise completion script
+      ansible.builtin.copy:
+        content: "{{ mise_completion.stdout }}"
+        dest: "{{ ansible_env.HOME }}/.zsh/completions/_mise"
+        mode: "0644"

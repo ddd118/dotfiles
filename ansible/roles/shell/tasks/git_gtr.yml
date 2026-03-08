@@ -1,25 +1,31 @@
 ---
-- name: Check if git-gtr is installed
-  ansible.builtin.command: which git-gtr
-  register: git_gtr_check
-  changed_when: false
-  failed_when: false
+- name: Ensure local bin directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: "0755"
 
-- name: Clone and install git-gtr
-  when: git_gtr_check.rc != 0
-  block:
-    - name: Clone git-worktree-runner
-      ansible.builtin.git:
-        repo: https://github.com/coderabbitai/git-worktree-runner.git
-        dest: /tmp/git-worktree-runner
-        depth: 1
+- name: Ensure git-gtr source directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/share/git-worktree-runner"
+    state: directory
+    mode: "0755"
 
-    - name: Run git-gtr install script
-      ansible.builtin.command:
-        cmd: ./install.sh
-        chdir: /tmp/git-worktree-runner
+- name: Clone or update git-worktree-runner
+  ansible.builtin.git:
+    repo: https://github.com/coderabbitai/git-worktree-runner.git
+    dest: "{{ ansible_env.HOME }}/.local/share/git-worktree-runner"
+    version: main
+    update: true
+    depth: 1
 
-    - name: Clean up git-worktree-runner
-      ansible.builtin.file:
-        path: /tmp/git-worktree-runner
-        state: absent
+- name: Install or update git-gtr via upstream install script
+  ansible.builtin.shell: |
+    set -euo pipefail
+    FILTERED_PATH="$(printf '%s\n' "$PATH" | tr ':' '\n' | awk '$0 != "/usr/local/bin"' | paste -sd ':' -)"
+    PATH="$FILTERED_PATH" ./install.sh
+  args:
+    chdir: "{{ ansible_env.HOME }}/.local/share/git-worktree-runner"
+    executable: /bin/bash
+  register: git_gtr_install
+  changed_when: "'already installed' not in (git_gtr_install.stdout | lower)"
