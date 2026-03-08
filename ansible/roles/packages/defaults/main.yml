@@ -4,6 +4,8 @@ apt_base_packages:
   - wget
   - gnupg
   - git
+  # flock コマンドを提供する
+  - util-linux
   - zsh
   - unzip
   - less
