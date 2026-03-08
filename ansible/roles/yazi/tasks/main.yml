@@ -1,12 +1,12 @@
 ---
-- name: Check if yazi is available from mise shims
+- name: Check if yazi is available
   ansible.builtin.command: bash -lc "command -v yazi"
   register: yazi_check
   changed_when: false
   failed_when: false
   environment: "{{ yazi_env }}"
 
-- name: Check if ya command is available from mise shims
+- name: Check if ya command is available
   ansible.builtin.command: bash -lc "command -v ya"
   register: ya_check
   changed_when: false
@@ -28,8 +28,8 @@
 - name: Explain why yazi flavor installation is skipped
   ansible.builtin.debug:
     msg: |
-      mise で yazi を入れていないため yazi flavor の追加をスキップします。
-      stow/config/.config/mise/config.toml の [tools] に yazi を含めてください。
+      yazi または ya コマンドが見つからないため yazi flavor の追加をスキップします。
+      yazi 本体を先に導入してから再実行してください。
   when:
     - yazi_check.rc != 0 or ya_check.rc != 0
     - yazi_flavors | length > 0

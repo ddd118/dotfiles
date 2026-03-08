@@ -43,3 +43,33 @@
     mode: "0600"
     modification_time: preserve
     access_time: preserve
+
+- name: Check if devcontainer-specific mise config exists
+  ansible.builtin.stat:
+    path: "{{ mise_devcontainer_config_source_path }}"
+  register: mise_devcontainer_config_stat
+  changed_when: false
+  when: settings_container_context | bool
+
+- name: Validate devcontainer-specific mise config
+  ansible.builtin.assert:
+    that:
+      - mise_devcontainer_config_stat.stat.exists
+      - mise_devcontainer_config_stat.stat.isreg | default(false)
+    fail_msg: >-
+      dotfiles Dev Container 用の mise 設定が見つかりません:
+      {{ mise_devcontainer_config_source_path }}
+  when: settings_container_context | bool
+
+- name: Replace mise global config with devcontainer profile
+  ansible.builtin.file:
+    path: "{{ mise_global_config_path }}"
+    state: absent
+  when: settings_container_context | bool
+
+- name: Install devcontainer-specific mise config
+  ansible.builtin.copy:
+    src: "{{ mise_devcontainer_config_source_path }}"
+    dest: "{{ mise_global_config_path }}"
+    mode: "0644"
+  when: settings_container_context | bool

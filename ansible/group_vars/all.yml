@@ -21,6 +21,9 @@ is_container: >-
     ansible_env.CODESPACES is defined
   }}
 
+# install.sh 経由の dotfiles Dev Container 文脈かどうか
+settings_container_context: "{{ (ansible_env.SETTINGS_CONTAINER_CONTEXT | default('0')) == '1' }}"
+
 # ==================================================
 # オプショナルコンポーネント
 # コマンドラインで上書き可: -e "install_docker=false"
@@ -44,3 +47,6 @@ enable_wsl_user_services: true
 # リポジトリパス
 # ==================================================
 settings_repo: "{{ playbook_dir | dirname }}"
+mise_config_dir: "{{ ansible_env.HOME }}/.config/mise"
+mise_global_config_path: "{{ mise_config_dir }}/config.toml"
+mise_devcontainer_config_source_path: "{{ settings_repo }}/stow/config/.config/mise/config.devcontainer.toml"
