@@ -44,11 +44,13 @@ scripts/        ... 再利用性のあるユーティリティスクリプト
 - **mise のランタイムを追加したい**
   - `stow/config/.config/mise/config.toml` の `[tools]`
   - `yazi` 本体もここで管理します
+  - `claude` は公式推奨に合わせて native installer で導入するため、ここには追加しません
 - **yazi の flavor を追加したい**
   - `ansible/roles/yazi/defaults/main.yml` の `yazi_flavors`
   - `ansible-playbook ansible/site.yml --tags yazi` は yazi 本体ではなく flavor の補助セットアップです
 - **curl で入れるツールを追加したい**
   - `ansible/roles/curl_tools/tasks/main.yml`
+  - 例: Claude Code, vim-plug
 - **stow でリンクするパッケージを増やしたい**
   - `ansible/roles/stow/defaults/main.yml` で mode を選んで追加
     - ファイル単位: `stow_file_packages`
