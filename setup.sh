@@ -4,8 +4,9 @@ set -euo pipefail
 # ------------------------------------------------------------
 # setup.sh
 #
-# - ローカル(WSL / Linux / Dev Container)に対して Ansible playbook を実行します
+# - ローカル(WSL / Linux)に対して Ansible playbook を実行します
 # - 依存(Ansible)が無い場合は bootstrap します
+# - コンテナ/remote dotfiles 文脈は install.sh から環境変数で渡します
 #
 # NOTE:
 #   - 目的は "一度実行すれば不足分だけを補う" ことなので、できるだけ冪等に作っています。
@@ -23,9 +24,8 @@ is_wsl() {
   [[ -r /proc/version ]] && grep -qi microsoft /proc/version
 }
 
-is_container() {
-  [[ -f /.dockerenv || -f /run/.containerenv ]] && return 0
-  [[ -r /proc/1/cgroup ]] && grep -Eq '/(docker|containerd|kubepods|podman|lxc)/' /proc/1/cgroup
+is_container_context() {
+  [[ "${SETTINGS_CONTAINER_CONTEXT:-0}" == "1" ]]
 }
 
 is_systemd_pid1() {
@@ -58,8 +58,8 @@ run_as_root() {
 
 ensure_wsl_systemd_enabled() {
   # 個人用途では WSL の systemd 有効をデフォルトにしたい。
-  # ただし Docker/Dev Container などコンテナでは設定しない。
-  if ! is_wsl || is_container; then
+  # ただし container/dotfiles 経由では設定しない。
+  if ! is_wsl || is_container_context; then
     return 0
   fi
 
