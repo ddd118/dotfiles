@@ -86,9 +86,14 @@ dotfiles 経由の Dev Container では `mise` ロール自体は動作します
 `stow` 後に `~/.config/mise/config.toml` を最小構成へ差し替えます。
 これにより `.zshrc` を増やさず、通常環境はフル構成のまま維持します。
 
+このリポジトリはコンテナ側の bind mount との兼ね合いで、
+dotfiles の clone 先を `~/dotfiles` に固定する前提です。
+`dotfiles.targetPath` は必ず `~/dotfiles` を指定してください。
+
 例: VS Code の User Settings (`settings.json`) に追加
 
 - `dotfiles.repository` は git clone できる URL（HTTPS / SSH）を指定します（private リポジトリでも OK）。
+- `dotfiles.targetPath` は必ず `~/dotfiles` を指定します。
 
 ```json
 {
