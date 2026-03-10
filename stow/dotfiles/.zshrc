@@ -323,6 +323,8 @@ if is_wsl && command -v powershell.exe >/dev/null 2>&1; then
       echo "error: failed to read clipboard or write: $out" >&2
       return 1
     fi
+
+    echo $out
   }
 fi
 
