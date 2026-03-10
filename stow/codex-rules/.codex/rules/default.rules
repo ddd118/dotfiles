@@ -53,3 +53,92 @@ prefix_rule(
         "pnpm -C packages/ui run test",
     ],
 )
+
+# Allow common read-only CLI commands used for repository exploration.
+prefix_rule(
+    pattern = ["rg"],
+    decision = "allow",
+    justification = "Allow ripgrep searches without approval prompts",
+    match = [
+        "rg foo",
+        "rg -n \"prefix_rule\" stow",
+        "rg --files",
+        "rg -l TODO .",
+    ],
+)
+
+prefix_rule(
+    pattern = ["fd"],
+    decision = "allow",
+    justification = "Allow file discovery with fd without approval prompts",
+    match = [
+        "fd",
+        "fd default.rules",
+        "fd -t f package.json .",
+    ],
+)
+
+prefix_rule(
+    pattern = ["find", "."],
+    decision = "allow",
+    justification = "Allow safe file discovery from the current directory without approval prompts",
+    match = [
+        "find . -type f",
+        "find . -maxdepth 2 -type d",
+        "find . -name '*.rules'",
+    ],
+)
+
+prefix_rule(
+    pattern = ["ls"],
+    decision = "allow",
+    justification = "Allow directory listing without approval prompts",
+    match = [
+        "ls",
+        "ls -la",
+        "ls stow",
+    ],
+)
+
+prefix_rule(
+    pattern = ["cat"],
+    decision = "allow",
+    justification = "Allow file reads without approval prompts",
+    match = [
+        "cat README.md",
+        "cat stow/codex-rules/.codex/rules/default.rules",
+    ],
+)
+
+prefix_rule(
+    pattern = ["sed", "-n"],
+    decision = "allow",
+    justification = "Allow non-mutating sed reads without approval prompts",
+    match = [
+        "sed -n '1,120p' README.md",
+        "sed -n '1,200p' stow/codex-rules/.codex/rules/default.rules",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", ["status", "diff", "show", "ls-files"]],
+    decision = "allow",
+    justification = "Allow read-only git inspection without approval prompts",
+    match = [
+        "git status --short",
+        "git diff -- stow/codex-rules/.codex/rules/default.rules",
+        "git show HEAD~1",
+        "git ls-files",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", "-C"],
+    decision = "allow",
+    justification = "Allow read-only git inspection scoped to a repository path without approval prompts",
+    match = [
+        "git -C /workspace status --short",
+        "git -C /workspace diff -- src/app.ts",
+        "git -C /workspace ls-files",
+    ],
+)
