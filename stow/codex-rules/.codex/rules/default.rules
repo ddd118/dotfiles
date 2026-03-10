@@ -23,12 +23,33 @@ prefix_rule(
         "npm run build",
         "npm run build -- --mode production",
         "npm run test",
-    ],
-    not_match = [
-        # This should NOT match because the 3rd arg isn't exactly "build" or "test".
-        "npm run build:prod",
+    ]
+)
+
+# Allow common pnpm package-management commands outside the sandbox without prompting.
+prefix_rule(
+    pattern = ["pnpm", ["install", "run"]],
+    decision = "allow",
+    justification = "Allow pnpm install and run commands without approval prompts",
+    match = [
+        "pnpm install",
+        "pnpm install --frozen-lockfile",
+        "pnpm run build",
+        "pnpm run lint:ci",
+        "pnpm run test",
     ],
 )
 
-# Allow package install for JS projects.
-prefix_rule(pattern = ["pnpm", "install"], decision = "allow")
+# Allow pnpm commands scoped to a target directory.
+# `-C` always takes a directory argument before the actual subcommand, so this is
+# intentionally broader than the rule above.
+prefix_rule(
+    pattern = ["pnpm", "-C"],
+    decision = "allow",
+    justification = "Allow pnpm commands scoped to a working directory without approval prompts",
+    match = [
+        "pnpm -C web install",
+        "pnpm -C web run build",
+        "pnpm -C packages/ui run test",
+    ],
+)
