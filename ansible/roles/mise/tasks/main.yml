@@ -29,17 +29,22 @@
 
 - name: "[DEBUG] mise install 前の状態確認"
   ansible.builtin.shell: |
-    echo "=== settings_container_context: {{ settings_container_context }} ==="
-    echo "=== config.toml type ==="
-    ls -la {{ mise_global_config_path }}
-    echo "=== config.toml content ==="
-    cat {{ mise_global_config_path }}
-    echo "=== mise config ls ==="
-    {{ mise_bin }} config ls
-    echo "=== mise ls (before install) ==="
-    {{ mise_bin }} ls 2>&1 || true
-    echo "=== all toml files in mise config dir ==="
-    ls -la {{ mise_config_dir }}/*.toml 2>/dev/null || echo "(none)"
+    {
+      echo "=== $(date '+%Y-%m-%d %H:%M:%S') mise debug start ==="
+      echo "=== settings_container_context: {{ settings_container_context }} ==="
+      echo "=== config.toml type ==="
+      ls -la {{ mise_global_config_path }}
+      echo "=== config.toml content ==="
+      cat {{ mise_global_config_path }}
+      echo "=== mise config ls ==="
+      {{ mise_bin }} config ls
+      echo "=== mise ls (before install) ==="
+      {{ mise_bin }} ls 2>&1 || true
+      echo "=== all toml files in mise config dir ==="
+      ls -la {{ mise_config_dir }}/*.toml 2>/dev/null || echo "(none)"
+      echo "=== env vars (MISE/SETTINGS) ==="
+      env | grep -iE '^(MISE|SETTINGS)' 2>/dev/null || echo "(none)"
+    } | tee /tmp/mise-debug.log
   environment: "{{ mise_env }}"
   changed_when: false
   when:
