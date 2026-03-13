@@ -6,16 +6,27 @@
   failed_when: false
   environment: "{{ shell_mise_env }}"
 
+- name: Check if usage is available for mise completions
+  ansible.builtin.command: bash -lc "command -v usage"
+  register: usage_bin
+  changed_when: false
+  failed_when: false
+  environment: "{{ shell_mise_env }}"
+  when: mise_bin.rc == 0
+
 - name: Ensure completions directory
   ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/.zsh/completions"
     state: directory
     mode: "0755"
-  when: mise_bin.rc == 0
+  when:
+    - mise_bin.rc == 0
+    - usage_bin.rc == 0
 
 - name: Generate and install mise completion script
   when:
     - mise_bin.rc == 0
+    - usage_bin.rc == 0
     - not ansible_check_mode
   block:
     - name: Generate mise completion script
@@ -29,3 +40,14 @@
         content: "{{ mise_completion.stdout }}"
         dest: "{{ ansible_env.HOME }}/.zsh/completions/_mise"
         mode: "0644"
+
+- name: Skip mise completion setup when usage is missing
+  ansible.builtin.debug:
+    msg: |
+      mise completion の生成をスキップしました。
+      `usage` CLI が未導入だと `mise completion zsh` は失敗します。
+      `mise install` 実行後に shell タグを再実行するか、フルセットアップを実行してください。
+  when:
+    - mise_bin.rc == 0
+    - usage_bin is defined
+    - usage_bin.rc != 0
