@@ -1,5 +1,5 @@
 # * Core Model Selection
-model = "gpt-5.3-codex"
+model = "gpt-5.4"
 # model_context_window = 1000000
 # model_auto_compact_token_limit = 900000
 web_search = "live"
@@ -144,3 +144,6 @@ trust_level = "trusted"
 
 [projects."/home/zanth/repos/tdx/tdx"]
 trust_level = "trusted"
+
+[notice.model_migrations]
+"gpt-5.3-codex" = "gpt-5.4"
