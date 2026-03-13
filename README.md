@@ -45,7 +45,9 @@ scripts/        ... 再利用性のあるユーティリティスクリプト
   - `stow/config/.config/mise/config.toml` の `[tools]`
   - ローカル Linux / WSL では `yazi` 本体もここで管理します
   - dotfiles 経由の Dev Container では `stow/config/.config/mise/config.devcontainer.toml` の内容で `~/.config/mise/config.toml` を差し替えます
-  - 現在の Dev Container 用最小構成は `yazi` と `codex` です。`codex` は `github:openai/codex` で直接管理します
+  - `mise` の zsh completion は `usage` CLI が必要なので、completion を使う前提なら `[tools]` に `usage` を含めてください
+  - shell セットアップでは `mise completion zsh` / `pnpm completion zsh` から `~/.zsh/completions/` を自動生成します
+  - 現在の Dev Container 用構成は `yazi`, `codex`, `uv`, `python`, `usage` です。`codex` は `github:openai/codex` で直接管理します
   - `claude` は公式推奨に合わせて native installer で導入するため、ここには追加しません
 - **yazi の flavor を追加したい**
   - `ansible/roles/yazi/defaults/main.yml` の `yazi_flavors`
