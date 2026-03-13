@@ -12,6 +12,7 @@ devcontainer-cli = "latest"
 dotnet = "latest"
 rust = "latest"
 yazi = "latest"
+usage = "latest"
 
 [settings]
 
