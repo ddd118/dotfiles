@@ -1,0 +1,38 @@
+{
+  "plugins": {
+    "@textlint/markdown": true
+  },
+  "filters": {
+    "comments": true,
+    "allowlist": {
+      "allowlistConfigPaths": [
+        "./textlint-allowlist.json"
+      ]
+    }
+  },
+  "rules": {
+    "preset-japanese": {
+      "sentence-length": {
+        "max": 100
+      },
+      "no-mix-dearu-desumasu": {
+        "preferInHeader": "",
+        "preferInBody": "ですます",
+        "preferInList": "ですます",
+        "strict": false
+      }
+    },
+    "prh": {
+      "rulePaths": [
+        "./phr.yml"
+      ]
+    },
+    "preset-ja-spacing": {
+      "ja-space-between-half-and-full-width": {
+        "space": "always"
+      },
+      "ja-space-around-code": true,
+      "ja-space-around-link": true
+    }
+  }
+}

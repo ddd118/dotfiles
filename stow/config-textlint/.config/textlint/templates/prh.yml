@@ -1,0 +1,11 @@
+version: 1
+
+rules:
+  - expected: GitHub
+    pattern: /github/i
+
+  - expected: JavaScript
+    pattern: /java\s*script/i
+
+  - expected: TypeScript
+    pattern: /typescript/i
