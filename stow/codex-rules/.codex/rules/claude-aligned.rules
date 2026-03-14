@@ -1,0 +1,138 @@
+# Project-specific Codex rules aligned with the current Claude tool baseline.
+#
+# Keep this file focused on low-risk, task-oriented shell commands that we want
+# Codex to run without extra approval prompts. Broad runtimes and network-heavy
+# commands are intentionally excluded even if Claude allows them.
+
+# Allow additional read-only git inspection commands used during repository work.
+prefix_rule(
+    pattern = ["git", ["fetch", "config", "log", "rev-parse"]],
+    decision = "allow",
+    justification = "Allow common git metadata inspection without approval prompts",
+    match = [
+        "git fetch origin",
+        "git config user.name",
+        "git log --oneline -n 20",
+        "git rev-parse --show-toplevel",
+    ],
+)
+
+# Allow staging when the user explicitly wants repository changes prepared.
+prefix_rule(
+    pattern = ["git", "add"],
+    decision = "allow",
+    justification = "Allow staging tracked changes without approval prompts",
+    match = [
+        "git add stow/codex-rules/.codex/rules/claude-aligned.rules",
+        "git add -A",
+    ],
+)
+
+# Allow extra read-only text inspection helpers that complement rg/sed/cat.
+prefix_rule(
+    pattern = ["grep"],
+    decision = "allow",
+    justification = "Allow grep-based text searches without approval prompts",
+    match = [
+        "grep -n TODO README.md",
+        "grep -R \"prefix_rule\" stow/codex-rules",
+    ],
+)
+
+prefix_rule(
+    pattern = ["head"],
+    decision = "allow",
+    justification = "Allow short file previews without approval prompts",
+    match = [
+        "head README.md",
+        "head -n 40 stow/claude/.claude/settings.json",
+    ],
+)
+
+prefix_rule(
+    pattern = ["wc"],
+    decision = "allow",
+    justification = "Allow simple file and line counts without approval prompts",
+    match = [
+        "wc -l README.md",
+        "wc -c stow/claude/.claude/settings.json",
+    ],
+)
+
+prefix_rule(
+    pattern = ["sort"],
+    decision = "allow",
+    justification = "Allow output sorting without approval prompts",
+    match = [
+        "sort filelist.txt",
+        "sort -u paths.txt",
+    ],
+)
+
+prefix_rule(
+    pattern = ["diff"],
+    decision = "allow",
+    justification = "Allow file comparisons without approval prompts",
+    match = [
+        "diff -u before.txt after.txt",
+        "diff foo.rules bar.rules",
+    ],
+)
+
+prefix_rule(
+    pattern = ["test"],
+    decision = "allow",
+    justification = "Allow shell test predicates without approval prompts",
+    match = [
+        "test -f AGENTS.md",
+        "test -d stow/codex-rules/.codex/rules",
+    ],
+)
+
+prefix_rule(
+    pattern = ["xxd"],
+    decision = "allow",
+    justification = "Allow binary inspection with xxd without approval prompts",
+    match = [
+        "xxd README.md | head",
+        "xxd -l 64 some.bin",
+    ],
+)
+
+# Allow narrowly scoped environment inspection commands.
+prefix_rule(
+    pattern = ["docker", "ps"],
+    decision = "allow",
+    justification = "Allow listing running Docker containers without approval prompts",
+    match = [
+        "docker ps",
+        "docker ps -a",
+    ],
+)
+
+prefix_rule(
+    pattern = ["pdfinfo"],
+    decision = "allow",
+    justification = "Allow PDF metadata inspection without approval prompts",
+    match = [
+        "pdfinfo manual.pdf",
+    ],
+)
+
+prefix_rule(
+    pattern = ["pdftops"],
+    decision = "allow",
+    justification = "Allow PDF to PostScript conversion without approval prompts",
+    match = [
+        "pdftops input.pdf output.ps",
+    ],
+)
+
+prefix_rule(
+    pattern = ["fc-query"],
+    decision = "allow",
+    justification = "Allow font metadata inspection without approval prompts",
+    match = [
+        "fc-query /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    ],
+)
