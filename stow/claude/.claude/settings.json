@@ -2,29 +2,57 @@
   "permissions": {
     "allow": [
       "mcp__serena",
-      "mcp__chrome-devtools",
       "mcp__figma-remote-mcp",
-      "mcp__playwright",
-      "mcp__brave-search",
-      "Bash(git apply:*)",
-      "Bash(patch:*)",
+      "mcp__plugin_serena_serena",
+      "mcp__plugin_figma_figma",
+      "mcp__plugin_context7_context7",
+      "mcp__plugin_figma_figma-desktop__get_design_context",
+      "mcp__plugin_figma_figma-desktop__get_screenshot",
+      "Bash(git fetch:*)",
+      "Bash(git config:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git show:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)",
       "Bash(cat:*)",
-      "Bash(wc:*)",
       "Bash(echo:*)",
       "Bash(diff:*)",
       "Bash(head:*)",
       "Bash(sed:*)",
-      "Bash(awk:*)",
-      "Bash(patch --dry-run:*)",
-      "Bash(git config:*)",
-      "mcp__codex__codex",
-      "Bash(git -C /workspace diff --numstat)"
-    ],
-    "deny": []
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(test:*)",
+      "Bash(docker ps:*)",
+      "Bash(sort:*)",
+      "Bash(pdfinfo:*)",
+      "Bash(pdftops:*)",
+      "Bash(fc-query:*)",
+      "WebFetch(domain:docs.claude.com)",
+      "WebFetch(domain:api.figma.com)",
+      "WebFetch(domain:www.figma.com)",
+      "WebFetch(domain:www.radix-vue.com)",
+      "WebFetch(domain:docs.pdfsharp.net)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:reka-ui.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:devtools-next.vuejs.org)",
+      "Skill(commit:*)",
+      "Skill(commit-and-push:*)",
+      "Skill(hookify:writing-rules)",
+      "Skill(example-skills:skill-creator)",
+      "Skill(figma:implement-design:*)"
+    ]
   },
   "statusLine": {
     "type": "command",
-    "command": "node /home/zanth/.claude/statusline-command.js",
+    "command": "node ${HOME}/.claude/statusline-command.js",
     "padding": 0
   },
   "enabledPlugins": {
@@ -47,5 +75,5 @@
     "cicd-automation@claude-code-workflows": true
   },
   "alwaysThinkingEnabled": true,
-  "effortLevel": "max"
+  "effortLevel": "high"
 }
