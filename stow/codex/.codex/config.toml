@@ -1,5 +1,5 @@
 # * Core Model Selection
-model = "gpt-5.4"
+model = "gpt-5.3-codex"
 # model_context_window = 1000000
 # model_auto_compact_token_limit = 900000
 web_search = "live"
@@ -15,10 +15,10 @@ model_verbosity = "medium"
 developer_instructions = ""
 
 # * Notifications
-# notify = ["python3", "/home/zanth/.local/bin/codex_notify.py"]
+# notify = ["python3", "~/.local/bin/codex_notify.py"]
 
 # * Approval & Sandbox
-approval_policy = "on-request"
+approval_policy = "never"
 sandbox_mode = "workspace-write"
 
 # * Authentication & Login
@@ -142,7 +142,7 @@ trust_level = "trusted"
 [projects."/workspace"]
 trust_level = "trusted"
 
-[projects."/home/zanth/repos/tdx/tdx"]
+[projects."/home/zanth/repos/work/tdx"]
 trust_level = "trusted"
 
 [notice.model_migrations]
