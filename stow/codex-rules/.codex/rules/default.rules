@@ -142,3 +142,4 @@ prefix_rule(
         "git -C /workspace ls-files",
     ],
 )
+prefix_rule(pattern=["docker", "build"], decision="allow")

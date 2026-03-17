@@ -6,7 +6,7 @@ web_search = "live"
 
 # * Reasoning & Verbosity (Responses API capable models)
 # 推論強度: minimal | low | medium | high | xhigh（既定: medium；gpt-5.2-codex と gpt-5.2 は xhigh）
-model_reasoning_effort = "medium"
+model_reasoning_effort = "xhigh"
 # GPT-5 系（Responses API）のテキスト冗長度: low | medium | high（既定: medium）
 model_verbosity = "medium"
 
@@ -27,7 +27,11 @@ cli_auth_credentials_store = "file"
 
 # * Project Documentation Controls
 # ディレクトリ階層で AGENTS.md が見つからない場合の、順序付きフォールバック。既定: []
-project_doc_fallback_filenames = ["AGENTS.local.md", "CLAUDE.md", "CLAUDE.local.md"]
+project_doc_fallback_filenames = [
+  "AGENTS.local.md",
+  "CLAUDE.md",
+  "CLAUDE.local.md",
+]
 # 親ディレクトリを探索する際に使うプロジェクトルートのマーカーとなるファイル名。既定: [".git"]
 project_root_markers = [".git"]
 
@@ -136,13 +140,16 @@ enabled = false
 # [projects."/absolute/path/to/project"]
 # trust_level = "trusted"  # または "untrusted"
 
-[projects."/home/zanth/repos/myproj"]
-trust_level = "trusted"
-
 [projects."/workspace"]
 trust_level = "trusted"
 
 [projects."/home/zanth/repos/work/tdx"]
+trust_level = "trusted"
+
+[projects."/home/kento/dotfiles"]
+trust_level = "trusted"
+
+[projects."/home/kento/repos/work/tdx"]
 trust_level = "trusted"
 
 [notice.model_migrations]
