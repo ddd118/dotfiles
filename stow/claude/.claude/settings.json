@@ -72,7 +72,26 @@
     "code-review-ai@claude-code-workflows": true,
     "code-refactoring@claude-code-workflows": true,
     "error-debugging@claude-code-workflows": true,
-    "cicd-automation@claude-code-workflows": true
+    "cicd-automation@claude-code-workflows": true,
+    "dotnet@dotnet-agent-skills": true,
+    "dotnet-data@dotnet-agent-skills": true,
+    "dotnet-test@dotnet-agent-skills": true,
+    "dotnet-diag@dotnet-agent-skills": true,
+    "dotnet-msbuild@dotnet-agent-skills": true,
+    "skill-creator@claude-plugins-official": true,
+    "backend-api-security@claude-code-workflows": true,
+    "api-scaffolding@claude-code-workflows": true,
+    "git-workflow@claude-code-templates": true,
+    "developer-essentials@claude-code-workflows": true,
+    "devops-automation@claude-code-templates": true
+  },
+  "extraKnownMarketplaces": {
+    "dotnet-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "dotnet/skills"
+      }
+    }
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "high"
