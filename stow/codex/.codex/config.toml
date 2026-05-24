@@ -1,12 +1,12 @@
 # * Core Model Selection
-model = "gpt-5.4-mini"
+model = "gpt-5.5"
 # model_context_window = 1000000
 # model_auto_compact_token_limit = 900000
 web_search = "live"
 
 # * Reasoning & Verbosity (Responses API capable models)
 # 推論強度: minimal | low | medium | high | xhigh（既定: medium；gpt-5.2-codex と gpt-5.2 は xhigh）
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "high"
 # GPT-5 系（Responses API）のテキスト冗長度: low | medium | high（既定: medium）
 model_verbosity = "medium"
 
@@ -143,13 +143,16 @@ enabled = false
 [projects."/workspace"]
 trust_level = "trusted"
 
-[projects."/home/zanth/repos/work/tdx"]
-trust_level = "trusted"
-
 [projects."/home/kento/dotfiles"]
 trust_level = "trusted"
 
 [projects."/home/kento/repos/work/tdx"]
+trust_level = "trusted"
+
+[projects."/home/tohof/repos/personal/project-hub"]
+trust_level = "trusted"
+
+[projects."/home/tohof/dotfiles"]
 trust_level = "trusted"
 
 [notice.model_migrations]
@@ -157,3 +160,6 @@ trust_level = "trusted"
 
 [features]
 multi_agent = true
+
+[plugins."figma@openai-curated"]
+enabled = true
