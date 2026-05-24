@@ -1,1 +1,0 @@
-../../../claude-commands/.claude/commands/commit.md

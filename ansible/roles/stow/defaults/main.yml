@@ -4,7 +4,6 @@ stow_packages:
   - claude-commands
   - claude-skills
   - codex
-  - codex-prompts
   - codex-rules
   - codex-skills
   - config
@@ -34,7 +33,6 @@ stow_file_packages:
 stow_dir_packages:
   - claude-commands
   - claude-skills
-  - codex-prompts
   - codex-rules
   - codex-skills
   - ssh-conf-d
@@ -46,10 +44,12 @@ stow_dir_bind_targets:
     target_rel_path: .claude/skills/how-to-component
   - package: claude-skills
     target_rel_path: .claude/skills/plan
-  - package: codex-prompts
-    target_rel_path: .codex/prompts
   - package: codex-rules
     target_rel_path: .codex/rules
+  - package: codex-skills
+    target_rel_path: .codex/skills/commit
+  - package: codex-skills
+    target_rel_path: .codex/skills/commit-and-push
   - package: codex-skills
     target_rel_path: .codex/skills/how-to-component
   - package: codex-skills
