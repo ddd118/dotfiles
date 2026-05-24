@@ -4,7 +4,7 @@ set -euo pipefail
 TEMPLATE_ROOT="${HOME}/.config/textlint/templates"
 
 if [ ! -f package.json ]; then
-  cat > package.json <<EOF
+  cat >package.json <<EOF
 {
   "name": "$(basename "$PWD")",
   "private": true
@@ -14,10 +14,11 @@ fi
 
 pnpm add -D \
   textlint \
-  textlint-rule-preset-japanese \
-  textlint-rule-prh \
+  textlint-filter-rule-allowlist \
   textlint-filter-rule-comments \
-  textlint-filter-rule-allowlist
+  textlint-rule-preset-ja-spacing \
+  textlint-rule-preset-japanese \
+  textlint-rule-prh
 
 copy_if_missing() {
   local src="$1"

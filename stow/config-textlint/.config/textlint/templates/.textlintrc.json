@@ -24,7 +24,7 @@
     },
     "prh": {
       "rulePaths": [
-        "./phr.yml"
+        "./prh.yml"
       ]
     },
     "preset-ja-spacing": {
