@@ -48,9 +48,11 @@
       {%- for result in (stow_file_mode_target_stats.results | default([])) -%}
         {%- set is_file = result.stat.isreg | default(false) -%}
         {%- set is_link = result.stat.islnk | default(false) -%}
+        {%- set target_parent = ansible_env.HOME ~ '/' ~ (result.item.target_rel_path | dirname) -%}
+        {%- set expected_source = result.item.source_path | relpath(target_parent) -%}
         {%- if is_file -%}
           {%- set _ = removable.append(result.item.target_rel_path) -%}
-        {%- elif is_link and ((result.stat.lnk_source | default('')) != result.item.source_path) -%}
+        {%- elif is_link and ((result.stat.lnk_source | default('')) != expected_source) -%}
           {%- set _ = removable.append(result.item.target_rel_path) -%}
         {%- endif -%}
       {%- endfor -%}

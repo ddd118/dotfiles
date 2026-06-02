@@ -30,7 +30,9 @@
     stow_dir_mode_mismatched_symlink_targets: >-
       {%- set mismatched = [] -%}
       {%- for result in (stow_dir_target_stats.results | default([])) -%}
-        {%- set expected_source = settings_repo ~ '/stow/' ~ result.item.package ~ '/' ~ result.item.target_rel_path -%}
+        {%- set source_path = settings_repo ~ '/stow/' ~ result.item.package ~ '/' ~ result.item.target_rel_path -%}
+        {%- set target_parent = ansible_env.HOME ~ '/' ~ (result.item.target_rel_path | dirname) -%}
+        {%- set expected_source = source_path | relpath(target_parent) -%}
         {%- if (result.stat.islnk | default(false)) and ((result.stat.lnk_source | default('')) != expected_source) -%}
           {%- set _ = mismatched.append({'path': result.item.target_rel_path, 'actual': (result.stat.lnk_source | default('')), 'expected': expected_source}) -%}
         {%- endif -%}
