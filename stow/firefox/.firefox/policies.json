@@ -49,8 +49,6 @@
         "*://*.google.com/*",
         "*://antigravity.google/*",
 
-        "*://gitlab.zanthing.xyz/*",
-
         "*://docker.com/*",
         "*://*.docker.com/*",
 
