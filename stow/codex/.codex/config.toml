@@ -1,25 +1,12 @@
 # * Core Model Selection
 model = "gpt-5.5"
-# model_context_window = 1000000
-# model_auto_compact_token_limit = 900000
-web_search = "live"
 
 # * Reasoning & Verbosity (Responses API capable models)
 # 推論強度: minimal | low | medium | high | xhigh
 model_reasoning_effort = "medium"
-# GPT-5 系（Responses API）のテキスト冗長度: low | medium | high（既定: medium）
-model_verbosity = "medium"
-
-# * Instruction Overrides
-# AGENTS.md の前に注入する追加のユーザー指示。既定: 未設定。
-developer_instructions = ""
 
 # * Notifications
 # notify = ["python3", "~/.local/bin/codex_notify.py"]
-
-# * Approval & Sandbox
-approval_policy = "never"
-sandbox_mode = "workspace-write"
 
 # * Authentication & Login
 # CLI のログイン認証情報の保存先: file（既定） | keyring | auto
@@ -32,12 +19,6 @@ project_doc_fallback_filenames = [
   "CLAUDE.md",
   "CLAUDE.local.md",
 ]
-# 親ディレクトリを探索する際に使うプロジェクトルートのマーカーとなるファイル名。既定: [".git"]
-project_root_markers = [".git"]
-
-# * History & File Opener
-# クリック可能な引用の URI スキーム: vscode（既定） | vscode-insiders | windsurf | cursor | none
-file_opener = "vscode"
 
 # * UI, Notifications, and Misc
 # 内部推論イベントを出力から抑止します。既定: false
@@ -51,6 +32,9 @@ windows_wsl_setup_acknowledged = false
 # 起動時にアップデート確認を行います。既定: true
 check_for_update_on_startup = true
 personality = "pragmatic"
+approval_policy = "on-request"
+approvals_reviewer = "guardian_subagent"
+sandbox_mode = "workspace-write"
 
 # * Shell Environment Policy for spawned processes (table)
 [shell_environment_policy]
@@ -79,13 +63,7 @@ show_tooltips = true
 alternate_screen = "auto"
 
 [tui.model_availability_nux]
-"gpt-5.5" = 1
-
-# `/feedback` からフィードバック送信できるかを制御します。既定: true
-[feedback]
-enabled = false
-
-# * Centralized Feature Flags (preferred)
+"gpt-5.5" = 2
 
 # * Define MCP servers under this table. Leave empty to disable.
 [mcp_servers]
@@ -132,8 +110,6 @@ enabled = false
 
 # * Projects (trust levels)
 [projects]
-# [projects."/absolute/path/to/project"]
-# trust_level = "trusted"  # または "untrusted"
 
 [projects."/workspace"]
 trust_level = "trusted"
@@ -145,6 +121,9 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/home/kento/repos/personal/project-hub"]
+trust_level = "trusted"
+
+[projects."/home/kento"]
 trust_level = "trusted"
 
 [notice.model_migrations]
