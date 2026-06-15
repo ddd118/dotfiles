@@ -8,7 +8,7 @@ usage() {
 
 オプション:
   --repo    : 対象リポジトリパス[カレントディレクトリ]
-  --archive : アーカイブパス[<original-worktree>/.tmp/tdx.zip]
+  --archive : アーカイブパス[<original-worktree>/.tmp/repo_name.zip]
   --dest    : コピー先[%USERPROFILE%/Downloads/<basename(archive)>]
   --once    : 1回だけコピーして終了[デフォルトは監視]
 
@@ -80,7 +80,7 @@ fi
 
 # コピー元のアーカイブパスを決定
 if [[ -z "$archive" ]]; then
-    archive="$original_root/.tmp/tdx.zip"
+    archive="$original_root/.tmp/$(basename "$original_root").zip"
 fi
 
 resolve_windows_downloads_dir() {

@@ -14,7 +14,7 @@ set -euo pipefail
 # * 環境変数:
 # *   TDX_EXPORT_OUT_ROOT: Gitベースツリーのルートディレクトリ (デフォルト: カレントリポジトリのベースワークツリーのルート)
 # *   TDX_EXPORT_OUT_DIR: アーカイブ出力先ディレクトリ (デフォルト: 出力先ルート/.tmp)
-# *   TDX_EXPORT_NAME: 出力アーカイブ名 (デフォルト: tdx.zip)
+# *   TDX_EXPORT_NAME: 出力アーカイブ名 (デフォルト: リポジトリ名.zip)
 
 # * 0) コマンドチェック
 #     必要なコマンドの存在確認（git, zip, flock）
@@ -44,14 +44,15 @@ fi
 #     出力先などは環境変数で上書き可能
 out_root="${TDX_EXPORT_OUT_ROOT:-$original_root}"
 out_dir="${TDX_EXPORT_OUT_DIR:-$out_root/.tmp}"
-archive_name="${TDX_EXPORT_NAME:-tdx.zip}"
+root_name="$(basename "$repo_root")"
+archive_name="${TDX_EXPORT_NAME:-$root_name.zip}"
 mkdir -p "$out_dir"
 
 # アーカイブ出力と関連ファイルのパス
 out="$out_dir/$archive_name"                # アーカイブ出力先
-lock_file="$out_dir/.tdx_export.lock"       # ロックファイル（同時実行制御用）
-pending_file="$out_dir/.tdx_export.pending" # 保留中のコミットハッシュ記録ファイル
-last_file="$out_dir/.tdx_export.last"       # 最後に処理したコミットハッシュ記録ファイル
+lock_file="$out_dir/.$root_name.lock"       # ロックファイル（同時実行制御用）
+pending_file="$out_dir/.$root_name.pending" # 保留中のコミットハッシュ記録ファイル
+last_file="$out_dir/.$root_name.last"       # 最後に処理したコミットハッシュ記録ファイル
 
 # アーカイブ対象のコミットを取得
 requested_commit="${1:-HEAD}"
