@@ -21,6 +21,7 @@ stow_file_packages:
   - claude
   - codex
   - config
+  - config-jj
   - config-textlint
   - config-systemd-user
   - cursor
