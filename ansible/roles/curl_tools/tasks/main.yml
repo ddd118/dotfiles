@@ -12,6 +12,19 @@
     - claude_check.rc != 0
     - not ansible_check_mode
 
+# --- Codex CLI ---
+- name: Check if Codex CLI is installed
+  ansible.builtin.command: bash -lc "command -v codex"
+  register: codex_check
+  changed_when: false
+  failed_when: false
+
+- name: Install Codex CLI via standalone installer
+  ansible.builtin.shell: curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=1 sh
+  when:
+    - codex_check.rc != 0
+    - not ansible_check_mode
+
 # --- vim-plug ---
 - name: Check vim autoload directory
   ansible.builtin.stat:
