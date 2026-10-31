@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git push --force-with-lease:*), Bash(git commit:*), Bash(git diff:*), Bash(git rev-parse:*), Bash(git log:*)
+allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git push --force-with-lease:*), Bash(git commit:*), Bash(git diff:*), Bash(git rev-parse:*), Bash(git log:*), Bash(jj root:*), Bash(jj st:*), Bash(jj diff:*), Bash(jj log:*), Bash(jj commit:*), Bash(jj bookmark set:*), Bash(jj git push:*)
 description: Commit, push, and open a PR
 ---
 
@@ -25,6 +25,18 @@ description: Commit, push, and open a PR
 --max-lines=N : 1 コミット最大変更行数の目安（既定: 500）
 --type=<t> : 全コミットの type を固定（feat|fix|refactor|chore|docs|perf|test|ci）
 --scope=<s> : 全コミットの scope を固定（例: ui、api、orders 等）
+
+# jj リポジトリの場合
+
+最初に `jj root` を実行し、成功した場合（`.jj/` がある場合）は下記「手順」の git コマンドを次に読み替える。失敗したら git のまま進める。
+
+- 手順 1（作業ブランチ）：BRANCH = `jj log -r 'heads(::@ & bookmarks())' --no-graph -T 'local_bookmarks.map(|b| b.name()).join(" ")'`。空の場合は bookmark 名を勝手に作らず、ユーザーに報告して停止する。複数ある場合は先頭を使う
+- 手順 2（変更の取得）：`jj st` と `jj diff --stat`（新規ファイルは自動で追跡されるため `??` は無い）
+- 手順 4（ステージ・コミット）：`git add` は不要。`jj commit -m "<header>\n\n<body>" -- <files...>` で対象ファイルだけをコミットする（残りは新しい作業コピーに残る。`-m` は 1 つの文字列で渡す）
+- 手順 5（残差）：パス指定なしの `jj commit -m "chore(misc): ..."` でまとめる
+- 手順 6（push）：`jj commit` は bookmark を進めないため、先に `jj bookmark set BRANCH -r @-` で最新コミットへ移動し、`jj git push --bookmark BRANCH` で push する（未追跡の bookmark は自動で追跡される）。push 拒否時は自動で強制せず、エラーを報告する
+- インタラクティブな `jj split` / `jj commit -i` は使わない
+- jj は git hook（`post-commit` 等）を実行しない。hook に依存する処理は走らない点に注意する
 
 # 手順
 

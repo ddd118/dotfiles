@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git diff:*), Bash(git rev-parse:*), Bash(git log:*)
+allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git diff:*), Bash(git rev-parse:*), Bash(git log:*), Bash(jj root:*), Bash(jj st:*), Bash(jj diff:*), Bash(jj log:*), Bash(jj commit:*)
 description: コミットのみ実行
 ---
 
@@ -24,6 +24,16 @@ description: コミットのみ実行
 --max-lines=N : 1 コミット最大変更行数の目安（既定: 500）
 --type=<t> : 全コミットの type を固定（feat|fix|refactor|chore|docs|perf|test|ci）
 --scope=<s> : 全コミットの scope を固定（例: ui、api、orders 等）
+
+# jj リポジトリの場合
+
+最初に `jj root` を実行し、成功した場合（`.jj/` がある場合）は下記「手順」の git コマンドを次に読み替える。失敗したら git のまま進める。
+
+- 手順 1（作業ブランチ）：不要。スキップする
+- 手順 2（変更の取得）：`jj st` と `jj diff --stat`（新規ファイルは自動で追跡されるため `??` は無い）
+- 手順 4（ステージ・コミット）：`git add` は不要。`jj commit -m "<header>\n\n<body>" -- <files...>` で対象ファイルだけをコミットする（残りは新しい作業コピーに残る。`-m` は 1 つの文字列で渡す）
+- 手順 5（残差）：パス指定なしの `jj commit -m "chore(misc): ..."` でまとめる
+- インタラクティブな `jj split` / `jj commit -i` は使わない
 
 # 手順
 

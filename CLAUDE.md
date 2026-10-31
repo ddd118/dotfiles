@@ -53,7 +53,7 @@ ansible-playbook ansible/site.yml --tags stow   # setup.sh を介さず直接実
 
 - `dotfiles`: `.zshrc` `.gitconfig` `.vimrc` `.p10k.zsh` など。`.gitconfig` は `core.hooksPath = ~/.githooks` を設定。
 - `claude` / `claude-commands` / `claude-skills`: `~/.claude/` の CLAUDE.md・settings.json・statusline・commands・skills。
-- `codex` / `codex-rules` / `codex-skills`: `~/.codex/` の AGENTS.md・config.toml・rules・skills。`codex-skills` は `claude-skills` の内容（`how-to-component`, `plan`）をミラーしつつ `commit` / `commit-and-push` も持つ（Claude 側は `claude-commands`）。**片方のスキルを変更したらもう片方も合わせる**。
+- `codex` / `codex-rules` / `codex-skills`: `~/.codex/` の AGENTS.md・config.toml・rules・skills。`codex-skills` は `claude-skills` の内容（`how-to-component`, `plan`）をミラーしつつ `commit` / `commit-and-push` も持つ（Claude 側は `claude-commands`）。`commit` / `commit-and-push` は `.jj/` があれば jj、無ければ git で動く分岐を持つ。**片方のスキルを変更したらもう片方も合わせる**。
 - `cursor`, `gemini`: 各 AI ツールの AGENTS.md / GEMINI.md・MCP 設定。
 - `config`: `~/.config/` 配下の mise（`config.toml`, `config.devcontainer.toml`, `tasks/textlint-init`）と yazi。`config-textlint` は textlint テンプレート、`config-jj` は jj（Jujutsu）の `~/.config/jj/config.toml`（user は書かず `.gitconfig` を流用する運用）。
 - `githooks`: `post-commit` / `post-rewrite` が `~/.local/bin/export-archive` を呼ぶ（失敗してもコミットを壊さない設計、rebase 中はスキップして post-rewrite で 1 回だけ実行）。
@@ -66,6 +66,7 @@ ansible-playbook ansible/site.yml --tags stow   # setup.sh を介さず直接実
 - apt: `ansible/roles/packages/defaults/main.yml`（コンテナではこのロール自体をスキップ）
 - mise: `stow/config/.config/mise/config.toml` の `[tools]`（Dev Container 用は `config.devcontainer.toml` も別途編集）
 - curl installer: `ansible/roles/curl_tools/tasks/main.yml`。**Claude Code と Codex は公式推奨の native/standalone installer で導入し、mise には入れない**。
+- textlint: **グローバルには導入しない**。`mise run textlint-init` で各プロジェクトのローカル（devDependencies）に入れる。
 - 詳細な手順は [README.md](README.md) を参照。
 
 ## 注意点
