@@ -148,6 +148,11 @@ if command -v codex >/dev/null 2>&1; then
   eval "$(codex completion zsh)"
 fi
 
+# jj の動的補完は内部で compdef を呼ぶため compinit の後に置く
+if command -v jj >/dev/null 2>&1; then
+  source <(COMPLETE=zsh jj)
+fi
+
 # ------------------------------------------------------------
 # setopt（WSL時代のやつから “安全で便利” 寄りを統合）
 setopt correct
