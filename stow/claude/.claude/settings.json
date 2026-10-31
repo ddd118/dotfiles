@@ -47,7 +47,8 @@
       "Skill(commit-and-push:*)",
       "Skill(hookify:writing-rules)",
       "Skill(example-skills:skill-creator)",
-      "Skill(figma:implement-design:*)"
+      "Skill(figma:implement-design:*)",
+      "Bash(git -C /home/kento/repos/personal/project-hub status --porcelain=v1)"
     ]
   },
   "statusLine": {
@@ -93,6 +94,19 @@
       }
     }
   },
+  "sandbox": {
+    "enabled": true
+  },
   "alwaysThinkingEnabled": true,
-  "effortLevel": "high"
+  "effortLevel": "high",
+  "tui": "fullscreen",
+  "theme": "dark",
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true,
+  "modelSettings": {
+    "claude-sonnet-5-5": {
+      "effortLevel": "high"
+    }
+  },
+  "remoteControlAtStartup": true
 }
