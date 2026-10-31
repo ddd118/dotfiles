@@ -26,6 +26,7 @@ apt_additional_packages:
   - ripgrep
   - shellcheck
   - shfmt
+  - sqlfluff
   - inotify-tools
   - openssh-server
   - peco
