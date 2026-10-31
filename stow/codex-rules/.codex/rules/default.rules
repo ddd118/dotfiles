@@ -143,3 +143,5 @@ prefix_rule(
     ],
 )
 prefix_rule(pattern=["docker", "build"], decision="allow")
+prefix_rule(pattern=["curl"], decision="allow")
+prefix_rule(pattern=["pnpm", "--dir", "web", "build"], decision="allow")

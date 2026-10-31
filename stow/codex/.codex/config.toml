@@ -63,7 +63,7 @@ show_tooltips = true
 alternate_screen = "auto"
 
 [tui.model_availability_nux]
-"gpt-5.5" = 2
+"gpt-5.5" = 4
 
 # * Define MCP servers under this table. Leave empty to disable.
 [mcp_servers]
