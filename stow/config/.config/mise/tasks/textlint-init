@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE dir="{{cwd}}"
 set -euo pipefail
 
 TEMPLATE_ROOT="${HOME}/.config/textlint/templates"
